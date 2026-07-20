@@ -1,0 +1,22 @@
+{
+  "name": "Timesheet Ledger",
+  "short_name": "Timesheet",
+  "description": "Track work days, leave, and holidays in a vintage ledger. Your records are saved locally on this device.",
+  "id": "/?timesheet-ledger",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#f2efe4",
+  "theme_color": "#e9e4d3",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["productivity", "utilities", "business"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
