@@ -7,7 +7,7 @@
 
 <!-- PWA / installability -->
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#e9e4d3">
+<meta name="theme-color" content="#F7F4EC">
 
 <!-- iOS home screen / standalone -->
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -589,13 +589,36 @@
 .lucide { width: 18px; height: 18px; stroke-width: 2; }
   .w-4 { width: 16px; height: 16px; }
   .h-4 { width: 16px; height: 16px; }
+
+  .refresh-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 8px;
+    color: var(--text-secondary);
+    border-radius: 50%;
+  }
+  .refresh-btn:hover {
+    background: var(--surface-secondary);
+    box-shadow: var(--shadow-clay);
+    color: var(--text-primary);
+  }
+
 </style>
 </head>
 <body>
 
 <div class="sheet">
-  <header>
+
+  <header style="position: relative;">
+    <button id="refreshAppBtn" class="refresh-btn" title="Refresh App" aria-label="Refresh App">
+      <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+    </button>
     <h1>Timesheet Ledger</h1>
+
     <p class="nameplate" id="nameplate"></p>
     <p class="sub">Click a date to mark it Present, Leave, or Holiday. Everything saves in this browser.</p>
     <div class="tabs">
@@ -1021,14 +1044,33 @@
   monthSelect.addEventListener('change', ()=>{ clearSelection(); render(); });
   yearSelect.addEventListener('change', ()=>{ clearSelection(); render(); });
 
-  document.getElementById('exportBtn').addEventListener('click', ()=>{
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  document.getElementById('exportBtn').addEventListener('click', async ()=>{
+    const jsonStr = JSON.stringify(data, null, 2);
+    const filename = 'timesheet-backup.json';
+    const blob = new Blob([jsonStr], {type:'application/json'});
+
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [new File([blob], filename, {type: 'application/json'})] })) {
+        await navigator.share({
+          files: [new File([blob], filename, {type: 'application/json'})],
+          title: 'Timesheet Backup',
+          text: 'Here is your timesheet backup file.'
+        });
+        return;
+      }
+    } catch (err) {
+      console.log('Share canceled or failed', err);
+    }
+    
+    // Fallback to traditional download
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'timesheet-backup.json';
+    a.download = filename;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 100);
   });
 
   document.getElementById('importBtn').addEventListener('click', ()=>{
@@ -1050,6 +1092,12 @@
     };
     reader.readAsText(file);
     e.target.value = '';
+  });
+
+  // ---- Tabs ----
+  
+  document.getElementById('refreshAppBtn').addEventListener('click', ()=>{
+    window.location.reload();
   });
 
   // ---- Tabs ----
@@ -1209,7 +1257,7 @@
   });
   document.getElementById('generateReportBtn').addEventListener('click', generateReport);
 
-  document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
+  document.getElementById('exportCsvBtn').addEventListener('click', async ()=>{
     const from = fromDateInput.value;
     const to = toDateInput.value;
     const minHours = parseFloat(minHoursInput.value || 0);
@@ -1221,13 +1269,31 @@
       rows.push([key, entry.status, entry.hours != null ? entry.hours : '']);
     });
     const csv = rows.map(r=>r.join(',')).join('\n');
+    const filename = 'timesheet-report_' + from + '_to_' + to + '.csv';
     const blob = new Blob([csv], {type:'text/csv'});
+
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [new File([blob], filename, {type: 'text/csv'})] })) {
+        await navigator.share({
+          files: [new File([blob], filename, {type: 'text/csv'})],
+          title: 'Timesheet CSV Report',
+          text: 'Here is your timesheet CSV report.'
+        });
+        return;
+      }
+    } catch (err) {
+      console.log('Share canceled or failed', err);
+    }
+
+    // Fallback to traditional download
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'timesheet-report_' + from + '_to_' + to + '.csv';
+    a.download = filename;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 100);
   });
 
   render();
