@@ -225,6 +225,8 @@
   
   /* Grid & Calendar */
   .grid {
+    min-width: 0;
+    width: 100%;
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 12px;
@@ -241,6 +243,7 @@
   }
   
   .daycell {
+    min-width: 0;
     position: relative;
     min-height: 100px;
     background: var(--surface-secondary);
@@ -542,25 +545,48 @@
   .dash-actions { margin-top: 32px; text-align: right; }
   
   /* Responsive */
+  
   @media (max-width: 768px) {
     .sheet { padding: 24px 16px; }
-    .grid { gap: 8px; }
-    .daycell { min-height: 80px; padding: 8px; }
+    .grid { gap: 6px; }
+    .daycell { min-height: 80px; padding: 6px; }
     .daynum { font-size: 14px; }
-    .stamp { font-size: 9px; }
+    .stamp, .daycell:not(.present):not(.leave):not(.holiday):not(.empty)::after { 
+        font-size: clamp(7px, 2vw, 10px); 
+        padding: 3px 6px; 
+    }
     .summary { grid-template-columns: 1fr 1fr; }
     .chart-row { grid-template-columns: 80px 1fr 50px; font-size: 12px; }
   }
   
   @media (max-width: 480px) {
+    .sheet { padding: 16px 8px; }
     .controls { flex-direction: column; align-items: stretch; }
     .btn-row { flex-direction: column; margin-left: 0; }
     .summary { grid-template-columns: 1fr; }
     .dash-controls { flex-direction: column; align-items: stretch; }
+    .grid { gap: 4px; }
+    .daycell { min-height: 60px; padding: 4px; border-radius: 8px; overflow: hidden; }
+    .daynum { font-size: 12px; }
+    .hours { font-size: 9px; }
+    
+    .stamp, .daycell:not(.present):not(.leave):not(.holiday):not(.empty)::after {
+      font-size: clamp(6px, 1.8vw, 8px);
+      padding: 2px 3px;
+      letter-spacing: -0.2px;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: center;
+      box-sizing: border-box;
+      width: 100%;
+    }
+    
+    .legend { gap: 8px; font-size: 10px; padding: 10px; justify-content: center; }
+    .dow { font-size: 9px; padding-bottom: 4px; }
   }
-
-
-  .lucide { width: 18px; height: 18px; stroke-width: 2; }
+.lucide { width: 18px; height: 18px; stroke-width: 2; }
   .w-4 { width: 16px; height: 16px; }
   .h-4 { width: 16px; height: 16px; }
 </style>
