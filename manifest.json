@@ -1,6 +1,6 @@
 {
-  "name": "Timesheet Ledger",
-  "short_name": "Timesheet",
+  "name": "Chrona",
+  "short_name": "Chrona",
   "description": "Track work days, leave, and holidays in a vintage ledger. Your records are saved locally on this device.",
   "id": "/?timesheet-ledger",
   "start_url": "./index.html",
@@ -8,7 +8,7 @@
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "orientation": "any",
-  "background_color": "#000000",
+  "background_color": "#EFE7D8",
   "theme_color": "#F7F4EC",
   "lang": "en",
   "dir": "ltr",
