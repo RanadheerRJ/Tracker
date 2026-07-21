@@ -141,19 +141,7 @@
   }
   
   /* Controls */
-  .controls {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
-    margin-bottom: 24px;
-    padding: 20px;
-    background: var(--surface-secondary);
-    border-radius: 24px;
-    box-shadow: var(--shadow-clay);
-  }
-  
-  select, button, input[type="date"], input[type="number"], input[type="text"] {
+  select, input[type="date"], input[type="number"], input[type="text"] {
     font-family: 'Inter', sans-serif;
     font-size: 15px;
     border: 1px solid var(--soft-border);
@@ -181,7 +169,7 @@
   
   .btn-row { 
     display: flex; 
-    flex-direction: column; 
+    flex-direction: row; 
     gap: 16px; 
     width: 100%;
     margin: 0;
@@ -335,6 +323,14 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
+    width: auto;
+    text-align: center;
+  }
+  
+  .account-form button {
+    width: 100%;
+    justify-content: center;
+    margin-top: 8px;
   }
   
   button:hover {
@@ -347,7 +343,7 @@
     box-shadow: var(--shadow-inset);
   }
   
-  .btn-row { margin-left: auto; display: flex; gap: 12px; }
+  .btn-row { flex-direction: row; margin-left: auto; display: flex; gap: 12px; flex-wrap: wrap; }
   
   /* Primary Button */
   .btn-primary, button.primary {
