@@ -772,6 +772,17 @@
   .quick-actions button { font-size: 13px; padding: 10px 14px; }
   .secondary-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
   .secondary-actions button { font-size: 13px; padding: 10px 14px; }
+
+  /* Product polish: compact PWA navigation and progressive settings disclosure. */
+  .today-card { display:flex; align-items:center; gap:14px; padding:17px 18px; margin:0 0 16px; background:linear-gradient(135deg,#fff 0%,#f4f8f4 100%); border:1px solid rgba(47,111,83,.12); border-radius:20px; box-shadow:var(--shadow-clay); }
+  .today-icon,.settings-avatar,.summary-icon,.security-empty-icon { flex:0 0 auto; display:grid; place-items:center; color:var(--accent-green); background:rgba(47,111,83,.1); border-radius:14px; width:42px; height:42px; }
+  .today-card>div:nth-child(2) { display:grid; gap:1px; min-width:0; flex:1; }
+  .today-card strong { font-family:'Playfair Display',serif; font-size:18px; font-weight:600; }.today-card p { margin:0; font-size:12px; color:var(--text-secondary); }.today-card button{padding:10px 13px;white-space:nowrap;font-size:13px}.eyebrow{display:block;text-transform:uppercase;letter-spacing:.75px;font-size:10px;font-weight:700;color:var(--accent-green)}
+  .quick-actions { align-items:center; padding:0 2px; gap:9px; }.quick-label{font-size:11px;text-transform:uppercase;letter-spacing:.7px;font-weight:700;color:var(--text-secondary);margin-right:2px}.quick-actions button{padding:9px 11px;font-size:12px;box-shadow:none;border:1px solid var(--soft-border)}.quick-actions button:not(.btn-primary){background:rgba(255,255,255,.55)}
+  .settings-hero{display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,#2f6f53,#3b8061);color:#fff;padding:24px;border-radius:22px;box-shadow:0 14px 30px rgba(47,111,83,.2);margin-bottom:16px}.settings-hero .settings-avatar{width:52px;height:52px;background:rgba(255,255,255,.17);color:#fff}.settings-hero h2{font-size:25px;margin:2px 0}.settings-hero p{margin:0;color:rgba(255,255,255,.8);font-size:13px}.settings-hero .eyebrow{color:#dbeee4}
+  .settings-stack{display:grid;gap:12px}.settings-group{background:var(--surface-secondary);border-radius:18px;box-shadow:var(--shadow-clay);overflow:hidden}.settings-group summary{display:flex;align-items:center;gap:12px;padding:18px;cursor:pointer;list-style:none}.settings-group summary::-webkit-details-marker{display:none}.settings-group summary>span:nth-child(2){display:grid;gap:1px;flex:1}.settings-group summary strong{font-size:15px}.settings-group summary small,.settings-row small,.preference-row small{font-size:12px;color:var(--text-secondary)}.settings-group .chevron{width:17px;transition:transform .2s}.settings-group[open] .chevron{transform:rotate(180deg)}.settings-content{padding:0 18px 18px;border-top:1px solid var(--soft-border)}.settings-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,.8fr);gap:16px;align-items:center;padding:16px 0;border-bottom:1px solid var(--soft-border)}.settings-row>div{display:grid;gap:3px}.settings-row strong{font-size:14px}.settings-row input{padding:11px 12px}.settings-row input[readonly]{opacity:.7}.settings-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}.settings-actions button{padding:10px 12px;font-size:12px;box-shadow:none}.settings-note{display:flex;gap:8px;align-items:flex-start;margin:15px 0 0;color:var(--text-secondary);font-size:12px;line-height:1.55}.settings-note .lucide{flex:0 0 auto;margin-top:2px;color:var(--accent-green)}.security-empty{display:flex;align-items:center;gap:12px;padding-top:18px}.security-empty>div:nth-child(2){display:grid;gap:3px;flex:1}.security-empty strong{font-size:14px}.security-empty p{margin:0;color:var(--text-secondary);font-size:12px}.security-empty button{padding:10px 12px;font-size:12px}.preference-row{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:18px 0;border-bottom:1px solid var(--soft-border)}.preference-row span{display:grid;gap:3px}.preference-row strong{font-size:14px}.preference-row input{width:42px;height:23px;accent-color:var(--accent-green)}.panic-card{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff7f5;border:1px solid rgba(182,76,76,.15);border-radius:14px;padding:13px;margin-top:16px}.panic-card>div{display:grid;grid-template-columns:24px 1fr;column-gap:8px;align-items:center}.panic-card .lucide{grid-row:span 2;color:var(--danger)}.panic-card strong{font-size:13px}.panic-card small{font-size:11px;color:var(--text-secondary)}.panic-card button{padding:9px 11px;font-size:12px;box-shadow:none}
+  @media(max-width:600px){.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:5px;max-width:none}.tab-btn{min-width:0;padding:10px 3px;font-size:12px;gap:5px;white-space:nowrap}.tab-btn .lucide{width:16px;height:16px}.today-card{align-items:flex-start;padding:15px}.today-card button{align-self:center;font-size:12px;padding:9px}.quick-actions{display:grid;grid-template-columns:1fr 1fr}.quick-label{grid-column:1/-1}.quick-actions button{justify-content:flex-start}.quick-actions button:last-child{grid-column:1/-1}.settings-hero{padding:19px}.settings-hero h2{font-size:22px}.settings-row{grid-template-columns:1fr;gap:9px}.settings-row input{width:100%}.security-empty{align-items:flex-start;flex-wrap:wrap}.security-empty button{width:100%;margin-top:4px}.settings-actions{display:grid;grid-template-columns:1fr 1fr}.settings-actions button:last-child:nth-child(odd){grid-column:1/-1}.panic-card{align-items:flex-start}.panic-card button{white-space:nowrap}.nameplate{font-size:19px}}
+
   .print-only { display: none; }
   @media print {
     body { background: #fff; padding: 0; color: #111; }
@@ -826,7 +837,7 @@
     <h1>Chrona</h1>
 
     <p class="nameplate" id="nameplate"></p>
-    <p class="sub">Click a date to mark it Present, Leave, or Holiday. Everything saves in this browser.</p>
+    <p class="sub">A calm, private record of your work — always ready when you are.</p>
     <div class="tabs">
       <button class="tab-btn active" data-tab="calendarPanel"><i data-lucide="calendar" class="w-4 h-4"></i> Calendar</button>
       <button class="tab-btn" data-tab="dashboardPanel"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard</button>
@@ -845,10 +856,16 @@
         <input type="file" id="importFile" accept="application/json" style="display:none">
       </div>
     </div>
+    <section class="today-card" id="todayCard" aria-live="polite">
+      <div class="today-icon"><i data-lucide="sparkles"></i></div>
+      <div><span class="eyebrow">Today</span><strong id="todayTitle">Ready to plan your day</strong><p id="todayDetail">No entry yet — log your hours in one tap.</p></div>
+      <button id="todayActionBtn" class="btn-primary">Log today</button>
+    </section>
     <div class="quick-actions" aria-label="Quick actions">
-      <button id="markTodayBtn" class="btn-primary"><i data-lucide="calendar-check" class="w-4 h-4"></i> Mark today · 8h</button>
-      <button id="copyPreviousBtn"><i data-lucide="copy" class="w-4 h-4"></i> Copy previous workday</button>
-      <button id="fillWeekdaysBtn"><i data-lucide="calendar-range" class="w-4 h-4"></i> Fill weekdays</button>
+      <span class="quick-label">Quick actions</span>
+      <button id="markTodayBtn" class="btn-primary"><i data-lucide="calendar-check" class="w-4 h-4"></i><span>Mark today · 8h</span></button>
+      <button id="copyPreviousBtn"><i data-lucide="copy" class="w-4 h-4"></i><span>Copy previous workday</span></button>
+      <button id="fillWeekdaysBtn"><i data-lucide="calendar-range" class="w-4 h-4"></i><span>Fill weekdays</span></button>
     </div>
     <div class="legend">
       <span>Present</span>
@@ -916,16 +933,37 @@
   </div>
 
   <div class="panel" id="settingsPanel">
-    <div class="chart"><h3>Profile & security</h3><p class="range-label">Your username is permanent because it is the unique cloud sign-in name.</p>
-      <div class="field"><label>Username</label><input id="settingsUsername" readonly></div>
-      <div class="field" style="margin-top:16px"><label for="settingsEmail">Recovery email</label><input id="settingsEmail" type="email" autocomplete="email"><small class="field-help">Required for “Forgot PIN”. This email is used as your Firebase sign-in identity and is visible in the username lookup.</small></div>
-      <div class="secondary-actions"><button id="updateEmailBtn">Update recovery email</button><button id="changeCloudPinBtn">Change cloud PIN</button><button id="setupSecurityBtn" class="btn-primary">Set up local app lock</button></div>
+    <section class="settings-hero">
+      <div class="settings-avatar"><i data-lucide="user-round"></i></div>
+      <div><span class="eyebrow">Your Chrona</span><h2 id="profileHeading">Profile & preferences</h2><p>Manage your account and privacy controls from one calm place.</p></div>
+    </section>
+    <div class="settings-stack">
+      <details class="settings-group" open>
+        <summary><span class="summary-icon"><i data-lucide="user-circle"></i></span><span><strong>Account</strong><small>Username, recovery & cloud PIN</small></span><i data-lucide="chevron-down" class="chevron"></i></summary>
+        <div class="settings-content">
+          <div class="settings-row"><div><span class="eyebrow">Username</span><strong id="settingsUsernameText">—</strong><small>Your permanent sign-in name.</small></div><input id="settingsUsername" readonly aria-label="Username"></div>
+          <div class="settings-row recovery-row"><div><span class="eyebrow">Recovery email</span><strong>Keep account recovery available</strong><small>Used only if you forget your cloud PIN.</small></div><input id="settingsEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
+          <div class="settings-actions"><button id="updateEmailBtn">Save recovery email</button><button id="changeCloudPinBtn">Change cloud PIN</button></div>
+          <p class="settings-note"><i data-lucide="info"></i> Your email is used to restore access; it is not shown in the main app.</p>
+        </div>
+      </details>
+      <details class="settings-group" id="privacyGroup">
+        <summary><span class="summary-icon"><i data-lucide="shield-check"></i></span><span><strong>Privacy lock</strong><small>Protect this device when you step away</small></span><i data-lucide="chevron-down" class="chevron"></i></summary>
+        <div class="settings-content">
+          <div class="security-empty" id="securityEmpty"><div class="security-empty-icon"><i data-lucide="lock-keyhole"></i></div><div><strong>Add a local privacy lock</strong><p>Create a separate device-only PIN, recovery questions, and a recovery code.</p></div><button id="setupSecurityBtn" class="btn-primary">Set up lock</button></div>
+          <div id="securitySettings" hidden>
+            <label class="preference-row"><span><strong>Lock when app is backgrounded</strong><small>Ask for your local PIN when you return.</small></span><input type="checkbox" id="autoLockToggle" aria-label="Lock when app is backgrounded"></label>
+            <div class="settings-actions"><button id="changeLocalPinBtn">Change local PIN</button><button id="changeQuestionsBtn">Security questions</button><button id="regenCodeBtn">New recovery code</button></div>
+            <div class="panic-card"><div><i data-lucide="eye-off"></i><strong>Quick hide</strong><small>Instantly lock Chrona with Ctrl/⌘ + Shift + L.</small></div><button id="panicBtn" class="danger">Lock now</button></div>
+            <p id="securityMessage" class="sync-state"></p>
+          </div>
+        </div>
+      </details>
+      <details class="settings-group">
+        <summary><span class="summary-icon"><i data-lucide="circle-help"></i></span><span><strong>Data & support</strong><small>Backups, reports, and account access</small></span><i data-lucide="chevron-down" class="chevron"></i></summary>
+        <div class="settings-content"><p class="settings-note"><i data-lucide="database"></i> Your ledger is cached securely on this device and syncs when connected. Export a backup from Calendar anytime.</p><p class="settings-note"><i data-lucide="lightbulb"></i> Use the Dashboard to download a CSV report or save a print-ready PDF.</p></div>
+      </details>
     </div>
-    <div class="chart" id="securitySettings" hidden><h3>Local app lock</h3><p class="range-label">This is a browser-only privacy lock. It does not replace your cloud PIN or encrypt your timesheet database.</p>
-      <label class="toggle"><input type="checkbox" id="autoLockToggle"> Lock when Chrona leaves the foreground</label>
-      <p class="field-help">Panic shortcut: <strong>Ctrl/⌘ + Shift + L</strong>, or use the Lock now button.</p>
-      <div class="secondary-actions"><button id="changeLocalPinBtn">Change local lock PIN</button><button id="changeQuestionsBtn">Update security questions</button><button id="regenCodeBtn">Regenerate recovery code</button><button id="panicBtn" class="danger">Lock now</button></div>
-      <p id="securityMessage" class="sync-state"></p></div>
   </div>
 </div>
 
@@ -1067,7 +1105,7 @@ import { QUESTIONS, createAccount as createLocalAccount, loadAccount as loadLoca
   function populateQuestions(){ const first=Math.floor(Math.random()*QUESTIONS.length); let second=Math.floor(Math.random()*(QUESTIONS.length-1)); if(second>=first) second++; ['questionOne','questionTwo'].forEach((id, position)=>{ const select=document.getElementById(id); select.innerHTML=''; QUESTIONS.forEach((question,index)=>{const option=document.createElement('option');option.value=index;option.textContent=question; if(index===(position ? second : first)) option.selected=true;select.appendChild(option);}); }); }
   function showRecoveryCode(code){ document.getElementById('recoveryCodeText').textContent=code; document.getElementById('recoveryCodeAck').checked=false; document.getElementById('recoveryCodeOverlay').classList.add('show'); }
   function openLocalSetup(){ if(!currentUser) return; populateQuestions(); document.getElementById('localSetupError').textContent=''; localSetupOverlay.classList.add('show'); }
-  function refreshSettings(){ const account=localAccount(); document.getElementById('settingsUsername').value=profile?.username||''; document.getElementById('settingsEmail').value=profile?.email||currentUser?.email||''; document.getElementById('securitySettings').hidden=!account; document.getElementById('setupSecurityBtn').hidden=!!account; if(account){document.getElementById('autoLockToggle').checked=account.autoLock!==false; document.getElementById('securityMessage').textContent=isWeakFallback(account)?'Warning: this browser lacks Web Crypto; local verifier uses a weaker compatibility fallback.':'Local PIN and recovery verifiers use PBKDF2-SHA-256.';} }
+  function refreshSettings(){ const account=localAccount(); const username=profile?.username||''; document.getElementById('settingsUsername').value=username; document.getElementById('settingsUsernameText').textContent=username ? '@'+username : '—'; document.getElementById('profileHeading').textContent=username ? username+''s space' : 'Profile & preferences'; document.getElementById('settingsEmail').value=profile?.email||currentUser?.email||''; document.getElementById('securitySettings').hidden=!account; document.getElementById('securityEmpty').hidden=!!account; document.getElementById('setupSecurityBtn').hidden=!!account; if(account){document.getElementById('autoLockToggle').checked=account.autoLock!==false; document.getElementById('securityMessage').textContent=isWeakFallback(account)?'This browser uses a reduced security fallback. Use a current browser for the strongest protection.':'Your local privacy lock is active on this device.';} }
   function lockPrivate(reason='locked'){ const account=localAccount(); if(!account){ signOut(auth); return; } setPrivateLock({uid:currentUser.uid, reason, lockedAt:Date.now()}); setPanicState(reason==='panic'); document.getElementById('appShell').classList.add('locked'); document.getElementById('unlockLocalPin').value=''; document.getElementById('localLockError').textContent=''; localLockOverlay.classList.add('show'); setTimeout(()=>document.getElementById('unlockLocalPin').focus(),0); }
   document.addEventListener('visibilitychange',()=>{const account=localAccount(); if(document.hidden && account?.autoLock!==false) lockPrivate('background');});
   document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.shiftKey&&event.key.toLowerCase()==='l'){event.preventDefault();lockPrivate('panic');}});
@@ -1251,6 +1289,21 @@ import { QUESTIONS, createAccount as createLocalAccount, loadAccount as loadLoca
     }
 
     renderSummary(y, m);
+    renderTodayBrief();
+  }
+
+  function renderTodayBrief(){
+    const now = new Date();
+    const key = keyFor(now.getFullYear(), now.getMonth(), now.getDate());
+    const entry = data[key];
+    const title = document.getElementById('todayTitle');
+    const detail = document.getElementById('todayDetail');
+    const action = document.getElementById('todayActionBtn');
+    if(!entry){ title.textContent = 'Ready to plan your day'; detail.textContent = 'No entry yet — log your hours in one tap.'; action.textContent = 'Log today'; action.hidden = false; return; }
+    const label = entry.status.charAt(0).toUpperCase() + entry.status.slice(1);
+    title.textContent = 'Today is marked ' + label;
+    detail.textContent = entry.status === 'holiday' ? 'Enjoy the day away — your ledger is up to date.' : (entry.hours || 0) + ' hours logged' + (entry.note ? ' · Note saved' : '') + '.';
+    action.textContent = 'Edit'; action.hidden = false;
   }
 
   function openModal(key, y, m, d){
@@ -1421,6 +1474,7 @@ import { QUESTIONS, createAccount as createLocalAccount, loadAccount as loadLoca
 
   // ---- Quick actions ----
   function isoLocal(date){ return date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0'); }
+  document.getElementById('todayActionBtn').addEventListener('click', ()=>{ const today=new Date(); const key=isoLocal(today); if(data[key]) openModal(key,today.getFullYear(),today.getMonth(),today.getDate()); else document.getElementById('markTodayBtn').click(); });
   document.getElementById('markTodayBtn').addEventListener('click', ()=>{
     const today = new Date(); const key = isoLocal(today);
     data[key] = { status: 'present', hours: 8 };
