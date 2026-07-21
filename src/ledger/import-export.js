@@ -7,7 +7,10 @@ export function createImportExportController({ getData, setData, save, render })
       const blob = new Blob([jsonStr], { type: 'application/json' });
 
       try {
-        if (navigator.canShare && navigator.canShare({ files: [new File([blob], filename, { type: 'application/json' })] })) {
+        if (
+          navigator.canShare &&
+          navigator.canShare({ files: [new File([blob], filename, { type: 'application/json' })] })
+        ) {
           await navigator.share({
             files: [new File([blob], filename, { type: 'application/json' })],
             title: 'Chrona Backup',
@@ -43,8 +46,12 @@ export function createImportExportController({ getData, setData, save, render })
           if (!imported || typeof imported !== 'object' || Array.isArray(imported)) throw new Error('Invalid backup');
           const clean = {};
           Object.entries(imported).forEach(([key, entry]) => {
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || !entry || !['present', 'leave', 'holiday'].includes(entry.status)) return;
-            clean[key] = { status: entry.status, hours: Number.isFinite(Number(entry.hours)) ? Number(entry.hours) : 0 };
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || !entry || !['present', 'leave', 'holiday'].includes(entry.status))
+              return;
+            clean[key] = {
+              status: entry.status,
+              hours: Number.isFinite(Number(entry.hours)) ? Number(entry.hours) : 0,
+            };
             if (typeof entry.note === 'string' && entry.note.trim()) clean[key].note = entry.note.trim().slice(0, 500);
           });
           if (!Object.keys(clean).length && Object.keys(imported).length) throw new Error('No valid entries');

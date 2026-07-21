@@ -7,7 +7,11 @@ const { auth, firestore } = createFirebaseServices();
 let selected = null;
 let users = [];
 const $ = (id) => document.getElementById(id);
-const esc = (value) => String(value || '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+const esc = (value) =>
+  String(value || '').replace(
+    /[&<>"']/g,
+    (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char],
+  );
 function setError(message = '') {
   $('editorError').textContent = message;
 }

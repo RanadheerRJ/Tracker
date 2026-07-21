@@ -8,7 +8,8 @@ export function setGreeting(name) {
 export function showAccountGate(mode, storage = localStorage) {
   document.getElementById('appShell').classList.add('locked');
   document.getElementById('accountGate').classList.add('show');
-  if (mode === 'login') document.getElementById('loginUsername').value = storage.getItem('chrona-last-username-v1') || '';
+  if (mode === 'login')
+    document.getElementById('loginUsername').value = storage.getItem('chrona-last-username-v1') || '';
   document.getElementById('registerAccountCard').hidden = mode !== 'register';
   document.getElementById('loginAccountCard').hidden = mode !== 'login';
   setTimeout(() => document.getElementById(mode === 'login' ? 'loginUsername' : 'accountName').focus(), 0);
@@ -94,7 +95,9 @@ export function bindAccountForms({
         firestoreApi,
       });
     } catch (err) {
-      error.textContent = err.userMessage || 'That username or PIN is not correct. If this is a new device, make sure the latest Firestore rules are published.';
+      error.textContent =
+        err.userMessage ||
+        'That username or PIN is not correct. If this is a new device, make sure the latest Firestore rules are published.';
       console.error(err.cause || err);
     }
   });
@@ -110,7 +113,10 @@ export function bindAccountForms({
 
   document
     .getElementById('loginAccountForm')
-    .insertAdjacentHTML('beforeend', '<button type="button" class="text-button" id="forgotCloudPinBtn">Forgot cloud PIN?</button>');
+    .insertAdjacentHTML(
+      'beforeend',
+      '<button type="button" class="text-button" id="forgotCloudPinBtn">Forgot cloud PIN?</button>',
+    );
   document.getElementById('forgotCloudPinBtn').addEventListener('click', async () => {
     const username = usernameFor(document.getElementById('loginUsername').value);
     const error = document.getElementById('loginAccountError');

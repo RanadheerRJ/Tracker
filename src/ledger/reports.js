@@ -213,7 +213,10 @@ export function createReportsController({ getData, getProfile }) {
         .sort()
         .filter((key) => key >= from && key <= to)
         .map((key) => [key, getData()[key]]);
-      const totalHours = entries.reduce((sum, [, entry]) => sum + (entry.status === 'present' ? Number(entry.hours || 0) : 0), 0);
+      const totalHours = entries.reduce(
+        (sum, [, entry]) => sum + (entry.status === 'present' ? Number(entry.hours || 0) : 0),
+        0,
+      );
       document.getElementById('printSheet').innerHTML =
         '<h1>Chrona Timesheet</h1><p><strong>' +
         escapeHtml(getProfile()?.name) +

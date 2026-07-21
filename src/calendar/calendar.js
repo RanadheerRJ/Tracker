@@ -99,7 +99,8 @@ export function createCalendarController({ getData, save }) {
 
         if (entry.note) {
           const noteIcon = document.createElement('div');
-          noteIcon.innerHTML = '<i data-lucide="file-text" style="width:10px;height:10px;color:var(--text-secondary); margin-top:2px;"></i>';
+          noteIcon.innerHTML =
+            '<i data-lucide="file-text" style="width:10px;height:10px;color:var(--text-secondary); margin-top:2px;"></i>';
           noteIcon.style.alignSelf = 'flex-start';
           noteIcon.style.marginLeft = '4px';
           cell.appendChild(noteIcon);

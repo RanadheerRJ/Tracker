@@ -123,7 +123,9 @@ export async function sendCloudPinReset({
     const lookup = await firestoreApi.getDoc(firestoreApi.doc(firestore, 'usernames', normalizedUsername));
     const email = lookup.exists() && lookup.data().email;
     if (!email) {
-      throw new ChronaAuthError('This legacy account needs a recovery email added from Settings before cloud PIN reset is available.');
+      throw new ChronaAuthError(
+        'This legacy account needs a recovery email added from Settings before cloud PIN reset is available.',
+      );
     }
     await authApi.sendPasswordResetEmail(auth, email);
     return true;
@@ -151,7 +153,6 @@ export async function changeCloudPin({ currentUser, currentPin, nextPin, confirm
 }
 
 export async function updateRecoveryEmail({
-  auth: _auth,
   firestore,
   currentUser,
   profile,
@@ -172,7 +173,11 @@ export async function updateRecoveryEmail({
     );
     await authApi.updateEmail(currentUser, normalizedEmail);
     const nextProfile = { ...profile, email: normalizedEmail };
-    await firestoreApi.setDoc(firestoreApi.doc(firestore, 'ledgers', currentUser.uid), { email: normalizedEmail }, { merge: true });
+    await firestoreApi.setDoc(
+      firestoreApi.doc(firestore, 'ledgers', currentUser.uid),
+      { email: normalizedEmail },
+      { merge: true },
+    );
     await firestoreApi.setDoc(
       firestoreApi.doc(firestore, 'usernames', profile.username),
       { uid: currentUser.uid, email: normalizedEmail },

@@ -9,7 +9,10 @@ function parseDotEnv(text) {
       .map((line) => {
         const index = line.indexOf('=');
         const key = line.slice(0, index).trim();
-        const value = line.slice(index + 1).trim().replace(/^['"]|['"]$/g, '');
+        const value = line
+          .slice(index + 1)
+          .trim()
+          .replace(/^['"]|['"]$/g, '');
         return [key, value];
       }),
   );
@@ -23,7 +26,9 @@ let envText = '';
 try {
   envText = await readFile('.env', 'utf8');
 } catch {
-  console.warn(`No .env file found. Ensure VITE_FIREBASE_ADMIN_UID matches firestore.rules (${rulesUid}) before deploying.`);
+  console.warn(
+    `No .env file found. Ensure VITE_FIREBASE_ADMIN_UID matches firestore.rules (${rulesUid}) before deploying.`,
+  );
   process.exit(0);
 }
 
@@ -31,7 +36,9 @@ const env = parseDotEnv(envText);
 const adminUid = env.VITE_FIREBASE_ADMIN_UID;
 if (!adminUid) throw new Error(`.env is missing VITE_FIREBASE_ADMIN_UID; it must match firestore.rules (${rulesUid}).`);
 if (adminUid !== rulesUid) {
-  throw new Error(`VITE_FIREBASE_ADMIN_UID (${adminUid}) does not match firestore.rules (${rulesUid}). Update both together.`);
+  throw new Error(
+    `VITE_FIREBASE_ADMIN_UID (${adminUid}) does not match firestore.rules (${rulesUid}). Update both together.`,
+  );
 }
 
 console.log('Admin UID matches firestore.rules.');

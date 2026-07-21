@@ -113,7 +113,9 @@ export function createSettingsController({
     });
     document.getElementById('panicBtn').addEventListener('click', () => lockPrivate('panic'));
     document.getElementById('setupSecurityBtn').addEventListener('click', openLocalSetup);
-    document.getElementById('localSetupCancel').addEventListener('click', () => localSetupOverlay.classList.remove('show'));
+    document
+      .getElementById('localSetupCancel')
+      .addEventListener('click', () => localSetupOverlay.classList.remove('show'));
     document.getElementById('localSetupSave').addEventListener('click', async () => {
       const pin = document.getElementById('localPin').value;
       const confirm = document.getElementById('localPinConfirm').value;
@@ -143,7 +145,8 @@ export function createSettingsController({
       if (!document.getElementById('recoveryCodeAck').checked) return;
       acknowledgeRecoveryCode(currentUser.uid);
       document.getElementById('recoveryCodeOverlay').classList.remove('show');
-      document.getElementById('securityMessage').textContent = 'Recovery code saved. It will only be shown again if regenerated.';
+      document.getElementById('securityMessage').textContent =
+        'Recovery code saved. It will only be shown again if regenerated.';
       if (afterRecoverySetup) {
         afterRecoverySetup = false;
         openLocalSetup();
@@ -173,7 +176,9 @@ export function createSettingsController({
       document.getElementById('recoveryError').textContent = '';
       localRecoveryOverlay.classList.add('show');
     });
-    document.getElementById('recoveryCancel').addEventListener('click', () => localRecoveryOverlay.classList.remove('show'));
+    document
+      .getElementById('recoveryCancel')
+      .addEventListener('click', () => localRecoveryOverlay.classList.remove('show'));
     document.getElementById('recoverLocalBtn').addEventListener('click', async () => {
       const currentUser = getCurrentUser();
       const code = document.getElementById('recoverCodeInput').value.trim();
@@ -237,16 +242,24 @@ export function createSettingsController({
         document.getElementById('securityMessage').textContent = 'Security answers updated successfully.';
       }),
     );
-    document.getElementById('regenCodeBtn').addEventListener('click', () =>
-      requireLocalPin(async () => showRecoveryCode(await regenerateRecoveryCode(getCurrentUser().uid))),
-    );
+    document
+      .getElementById('regenCodeBtn')
+      .addEventListener('click', () =>
+        requireLocalPin(async () => showRecoveryCode(await regenerateRecoveryCode(getCurrentUser().uid))),
+      );
     document.getElementById('changeCloudPinBtn').addEventListener('click', async () => {
       const current = prompt('Enter your current cloud PIN:');
       const next = prompt('New cloud PIN (4–6 digits):');
       const confirm = prompt('Confirm new cloud PIN:');
       if (!current || !validPin(next || '') || next !== confirm) return alert('Cloud PIN was not changed.');
       try {
-        await changeCloudPin({ currentUser: getCurrentUser(), currentPin: current, nextPin: next, confirmPin: confirm, authApi });
+        await changeCloudPin({
+          currentUser: getCurrentUser(),
+          currentPin: current,
+          nextPin: next,
+          confirmPin: confirm,
+          authApi,
+        });
         alert('Cloud PIN changed successfully.');
       } catch (error) {
         alert(error.userMessage || 'Could not change cloud PIN. Check your current PIN and try again.');

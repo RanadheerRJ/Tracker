@@ -1,245 +1,517 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Chrona</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Chrona</title>
 
-<!-- PWA / installability -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#F7F4EC">
+    <!-- PWA / installability -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#F7F4EC" />
 
-<!-- iOS home screen / standalone -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Chrona">
-<meta name="application-name" content="Chrona">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <!-- iOS home screen / standalone -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Chrona" />
+    <meta name="application-name" content="Chrona" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 
-<!-- Favicons -->
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/lucide@latest"></script>
-<link rel="stylesheet" href="./styles.css">
-</head>
-<body>
-<div id="accountGate" class="account-gate" aria-live="polite">
-  <section class="account-card" id="registerAccountCard">
-    <div class="account-mark"><i data-lucide="cloud"></i></div>
-    <h1>Welcome to Chrona</h1>
-    <p class="account-copy">Create an account to keep your private ledger synced securely across your devices.</p>
-    <form id="registerAccountForm" class="account-form">
-      <div><label for="accountName">Your name</label><input id="accountName" type="text" maxlength="40" autocomplete="name" required></div>
-      <div><label for="accountUsername">Username</label><input id="accountUsername" type="text" maxlength="24" pattern="[A-Za-z0-9_.-]{3,24}" autocomplete="username" required></div>
-      <div><label for="accountEmail">Recovery email</label><input id="accountEmail" type="email" autocomplete="email" required><small class="field-help">Used for cloud PIN reset. It is stored in the username lookup so username login can find your Firebase account.</small></div>
-      <div><label for="newPin">Choose a 4–6 digit PIN</label><input id="newPin" class="pin-input" type="password" inputmode="numeric" pattern="\d{4,6}" maxlength="6" autocomplete="new-password" required></div>
-      <div><label for="confirmPin">Confirm PIN</label><input id="confirmPin" class="pin-input" type="password" inputmode="numeric" pattern="\d{4,6}" maxlength="6" autocomplete="new-password" required></div>
-      <div class="account-error" id="registerAccountError"></div>
-      <button class="primary" type="submit"><i data-lucide="user-plus"></i> Create account</button>
-    </form>
-    <p class="account-note">Already use Chrona? <button type="button" class="text-button" id="showLoginBtn">Log in</button></p>
-  </section>
-  <section class="account-card" id="loginAccountCard" hidden>
-    <div class="account-mark"><i data-lucide="lock-keyhole"></i></div>
-    <h1>Welcome back</h1>
-    <p class="account-copy">Log in to load your private timesheet from any device.</p>
-    <form id="loginAccountForm" class="account-form">
-      <div><label for="loginUsername">Username</label><input id="loginUsername" type="text" maxlength="24" autocomplete="username" required></div>
-      <div><label for="loginPin">PIN</label><input id="loginPin" class="pin-input" type="password" inputmode="numeric" pattern="\d{4,6}" maxlength="6" autocomplete="current-password" required></div>
-      <div class="account-error" id="loginAccountError"></div>
-      <button class="primary" type="submit"><i data-lucide="unlock"></i> Log in</button>
-    </form>
-    <p class="account-note">New to Chrona? <button type="button" class="text-button" id="showRegisterBtn">Create an account</button></p>
-  </section>
-</div>
-<div id="appShell" class="app-shell locked">
-<div class="sheet">
-
-  <header style="position: relative;">
-    <button id="refreshAppBtn" class="refresh-btn" title="Refresh App" aria-label="Refresh App">
-      <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-    </button>
-    <h1>Chrona</h1>
-
-    <p class="nameplate" id="nameplate"></p>
-    <p class="sub">A calm, private record of your work — always ready when you are.</p>
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="calendarPanel"><i data-lucide="calendar" class="w-4 h-4"></i> Calendar</button>
-      <button class="tab-btn" data-tab="dashboardPanel"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard</button>
-      <button class="tab-btn" data-tab="settingsPanel"><i data-lucide="settings" class="w-4 h-4"></i> Settings</button>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="accountGate" class="account-gate" aria-live="polite">
+      <section class="account-card" id="registerAccountCard">
+        <div class="account-mark"><i data-lucide="cloud"></i></div>
+        <h1>Welcome to Chrona</h1>
+        <p class="account-copy">Create an account to keep your private ledger synced securely across your devices.</p>
+        <form id="registerAccountForm" class="account-form">
+          <div>
+            <label for="accountName">Your name</label
+            ><input id="accountName" type="text" maxlength="40" autocomplete="name" required />
+          </div>
+          <div>
+            <label for="accountUsername">Username</label
+            ><input
+              id="accountUsername"
+              type="text"
+              maxlength="24"
+              pattern="[A-Za-z0-9_.-]{3,24}"
+              autocomplete="username"
+              required
+            />
+          </div>
+          <div>
+            <label for="accountEmail">Recovery email</label
+            ><input id="accountEmail" type="email" autocomplete="email" required /><small class="field-help"
+              >Used for cloud PIN reset. It is stored in the username lookup so username login can find your Firebase
+              account.</small
+            >
+          </div>
+          <div>
+            <label for="newPin">Choose a 4–6 digit PIN</label
+            ><input
+              id="newPin"
+              class="pin-input"
+              type="password"
+              inputmode="numeric"
+              pattern="\d{4,6}"
+              maxlength="6"
+              autocomplete="new-password"
+              required
+            />
+          </div>
+          <div>
+            <label for="confirmPin">Confirm PIN</label
+            ><input
+              id="confirmPin"
+              class="pin-input"
+              type="password"
+              inputmode="numeric"
+              pattern="\d{4,6}"
+              maxlength="6"
+              autocomplete="new-password"
+              required
+            />
+          </div>
+          <div class="account-error" id="registerAccountError"></div>
+          <button class="primary" type="submit"><i data-lucide="user-plus"></i> Create account</button>
+        </form>
+        <p class="account-note">
+          Already use Chrona? <button type="button" class="text-button" id="showLoginBtn">Log in</button>
+        </p>
+      </section>
+      <section class="account-card" id="loginAccountCard" hidden>
+        <div class="account-mark"><i data-lucide="lock-keyhole"></i></div>
+        <h1>Welcome back</h1>
+        <p class="account-copy">Log in to load your private timesheet from any device.</p>
+        <form id="loginAccountForm" class="account-form">
+          <div>
+            <label for="loginUsername">Username</label
+            ><input id="loginUsername" type="text" maxlength="24" autocomplete="username" required />
+          </div>
+          <div>
+            <label for="loginPin">PIN</label
+            ><input
+              id="loginPin"
+              class="pin-input"
+              type="password"
+              inputmode="numeric"
+              pattern="\d{4,6}"
+              maxlength="6"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+          <div class="account-error" id="loginAccountError"></div>
+          <button class="primary" type="submit"><i data-lucide="unlock"></i> Log in</button>
+        </form>
+        <p class="account-note">
+          New to Chrona? <button type="button" class="text-button" id="showRegisterBtn">Create an account</button>
+        </p>
+      </section>
     </div>
-  </header>
+    <div id="appShell" class="app-shell locked">
+      <div class="sheet">
+        <header style="position: relative">
+          <button id="refreshAppBtn" class="refresh-btn" title="Refresh App" aria-label="Refresh App">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+          </button>
+          <h1>Chrona</h1>
 
-  <div class="panel active" id="calendarPanel">
-    <div class="controls">
-      <select id="monthSelect"></select>
-      <select id="yearSelect"></select>
-      <div class="btn-row">
-        <button id="selectModeBtn" title="Select several dates at once">Select multiple</button>
-        <button id="exportBtn" title="Download your data as a backup file"><i data-lucide="download" class="w-4 h-4"></i> Export</button>
-        <button id="importBtn" title="Load a previously exported file"><i data-lucide="upload" class="w-4 h-4"></i> Import</button>
-        <input type="file" id="importFile" accept="application/json" style="display:none">
-      </div>
-    </div>
-    <section class="today-card" id="todayCard" aria-live="polite">
-      <div class="today-icon"><i data-lucide="sparkles"></i></div>
-      <div><span class="eyebrow">Today</span><strong id="todayTitle">Ready to plan your day</strong><p id="todayDetail">No entry yet — log your hours in one tap.</p></div>
-      <button id="todayActionBtn" class="btn-primary">Log today</button>
-    </section>
-    <div class="quick-actions" aria-label="Quick actions">
-      <span class="quick-label">Quick actions</span>
-      <button id="markTodayBtn" class="btn-primary"><i data-lucide="calendar-check" class="w-4 h-4"></i><span>Mark today · 8h</span></button>
-      <button id="copyPreviousBtn"><i data-lucide="copy" class="w-4 h-4"></i><span>Copy previous workday</span></button>
-      <button id="fillWeekdaysBtn"><i data-lucide="calendar-range" class="w-4 h-4"></i><span>Fill weekdays</span></button>
-    </div>
-    <div class="legend">
-      <span>Present</span>
-      <span>Leave</span>
-      <span>Holiday</span>
-      <span><i class="swatch" style="background:#E2DCCC"></i> Unmarked</span>
-    </div>
+          <p class="nameplate" id="nameplate"></p>
+          <p class="sub">A calm, private record of your work — always ready when you are.</p>
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="calendarPanel">
+              <i data-lucide="calendar" class="w-4 h-4"></i> Calendar
+            </button>
+            <button class="tab-btn" data-tab="dashboardPanel">
+              <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+            </button>
+            <button class="tab-btn" data-tab="settingsPanel">
+              <i data-lucide="settings" class="w-4 h-4"></i> Settings
+            </button>
+          </div>
+        </header>
 
-    <div class="grid" id="dowRow"></div>
-    <div class="grid" id="calGrid" style="margin-top:6px;"></div>
+        <div class="panel active" id="calendarPanel">
+          <div class="controls">
+            <select id="monthSelect"></select>
+            <select id="yearSelect"></select>
+            <div class="btn-row">
+              <button id="selectModeBtn" title="Select several dates at once">Select multiple</button>
+              <button id="exportBtn" title="Download your data as a backup file">
+                <i data-lucide="download" class="w-4 h-4"></i> Export
+              </button>
+              <button id="importBtn" title="Load a previously exported file">
+                <i data-lucide="upload" class="w-4 h-4"></i> Import
+              </button>
+              <input type="file" id="importFile" accept="application/json" style="display: none" />
+            </div>
+          </div>
+          <section class="today-card" id="todayCard" aria-live="polite">
+            <div class="today-icon"><i data-lucide="sparkles"></i></div>
+            <div>
+              <span class="eyebrow">Today</span><strong id="todayTitle">Ready to plan your day</strong>
+              <p id="todayDetail">No entry yet — log your hours in one tap.</p>
+            </div>
+            <button id="todayActionBtn" class="btn-primary">Log today</button>
+          </section>
+          <div class="quick-actions" aria-label="Quick actions">
+            <span class="quick-label">Quick actions</span>
+            <button id="markTodayBtn" class="btn-primary">
+              <i data-lucide="calendar-check" class="w-4 h-4"></i><span>Mark today · 8h</span>
+            </button>
+            <button id="copyPreviousBtn">
+              <i data-lucide="copy" class="w-4 h-4"></i><span>Copy previous workday</span>
+            </button>
+            <button id="fillWeekdaysBtn">
+              <i data-lucide="calendar-range" class="w-4 h-4"></i><span>Fill weekdays</span>
+            </button>
+          </div>
+          <div class="legend">
+            <span>Present</span>
+            <span>Leave</span>
+            <span>Holiday</span>
+            <span><i class="swatch" style="background: #e2dccc"></i> Unmarked</span>
+          </div>
 
-    <div class="bulkbar" id="bulkbar">
-      <span class="count" id="bulkCount">0 selected</span>
-      <button data-bulk="present"><i data-lucide="check-circle" class="w-4 h-4"></i> Mark Present</button>
-      <button data-bulk="leave"><i data-lucide="coffee" class="w-4 h-4"></i> Mark Leave</button>
-      <button data-bulk="holiday"><i data-lucide="sun" class="w-4 h-4"></i> Mark Holiday</button>
-      <button data-bulk="clear"><i data-lucide="x-circle" class="w-4 h-4"></i> Clear</button>
-      <button id="bulkCancelBtn">Cancel</button>
-    </div>
+          <div class="grid" id="dowRow"></div>
+          <div class="grid" id="calGrid" style="margin-top: 6px"></div>
 
-    <div class="summary" id="summary"></div>
-  </div>
+          <div class="bulkbar" id="bulkbar">
+            <span class="count" id="bulkCount">0 selected</span>
+            <button data-bulk="present"><i data-lucide="check-circle" class="w-4 h-4"></i> Mark Present</button>
+            <button data-bulk="leave"><i data-lucide="coffee" class="w-4 h-4"></i> Mark Leave</button>
+            <button data-bulk="holiday"><i data-lucide="sun" class="w-4 h-4"></i> Mark Holiday</button>
+            <button data-bulk="clear"><i data-lucide="x-circle" class="w-4 h-4"></i> Clear</button>
+            <button id="bulkCancelBtn">Cancel</button>
+          </div>
 
-  <div class="panel" id="dashboardPanel">
-    <div class="dash-controls">
-      <div class="field">
-        <label for="fromDate">From</label>
-        <input type="date" id="fromDate">
-      </div>
-      <div class="field">
-        <label for="toDate">To</label>
-        <input type="date" id="toDate">
-      </div>
-      <div class="field">
-        <label for="groupBySelect">Group by</label>
-        <select id="groupBySelect">
-          <option value="day">Day</option>
-          <option value="week" selected>Week</option>
-          <option value="month">Month</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="minHoursInput">Min hrs/day counted</label>
-        <input type="number" id="minHoursInput" value="0" min="0" step="0.5">
-      </div>
-      <button id="generateReportBtn" class="btn-primary"><i data-lucide="bar-chart-2" class="w-4 h-4"></i> Generate report</button>
-    </div>
-
-    <div class="quick-range">
-      <button data-range="thisMonth">This month</button>
-      <button data-range="lastMonth">Last month</button>
-      <button data-range="thisYear">This year</button>
-      <button data-range="allTime">All time</button>
-    </div>
-
-    <div class="range-label" id="rangeLabel"></div>
-    <div class="summary" id="dashSummary"></div>
-    <div class="chart" id="dashChart"></div>
-
-    <div class="dash-actions secondary-actions">
-      <button id="exportCsvBtn"><i data-lucide="download" class="w-4 h-4"></i> Export CSV report</button>
-      <button id="printPdfBtn"><i data-lucide="file-text" class="w-4 h-4"></i> Print / save as PDF</button>
-    </div>
-    <section id="printSheet" class="print-only"></section>
-  </div>
-
-  <div class="panel" id="settingsPanel">
-    <section class="settings-hero">
-      <div class="settings-avatar"><i data-lucide="user-round"></i></div>
-      <div><span class="eyebrow">Your Chrona</span><h2 id="profileHeading">Profile & preferences</h2><p>Manage your account and privacy controls from one calm place.</p></div>
-    </section>
-    <div class="settings-stack">
-      <details class="settings-group" open>
-        <summary><span class="summary-icon"><i data-lucide="user-circle"></i></span><span><strong>Account</strong><small>Username, recovery & cloud PIN</small></span><i data-lucide="chevron-down" class="chevron"></i></summary>
-        <div class="settings-content">
-          <div class="settings-row"><div><span class="eyebrow">Username</span><strong id="settingsUsernameText">—</strong><small>Your permanent sign-in name.</small></div><input id="settingsUsername" readonly aria-label="Username"></div>
-          <div class="settings-row recovery-row"><div><span class="eyebrow">Recovery email</span><strong>Keep account recovery available</strong><small>Used only if you forget your cloud PIN.</small></div><input id="settingsEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
-          <div class="settings-actions"><button id="updateEmailBtn">Save recovery email</button><button id="changeCloudPinBtn">Change cloud PIN</button></div>
-          <p class="settings-note"><i data-lucide="info"></i> Your email is used to restore access; it is not shown in the main app.</p>
+          <div class="summary" id="summary"></div>
         </div>
-      </details>
-      <details class="settings-group" id="privacyGroup">
-        <summary><span class="summary-icon"><i data-lucide="shield-check"></i></span><span><strong>Privacy lock</strong><small>Protect this device when you step away</small></span><i data-lucide="chevron-down" class="chevron"></i></summary>
-        <div class="settings-content">
-          <div class="security-empty" id="securityEmpty"><div class="security-empty-icon"><i data-lucide="lock-keyhole"></i></div><div><strong>Add a local privacy lock</strong><p>Create a separate device-only PIN, recovery questions, and a recovery code.</p></div><button id="setupSecurityBtn" class="btn-primary">Set up lock</button></div>
-          <div id="securitySettings" hidden>
-            <label class="preference-row"><span><strong>Lock when app is backgrounded</strong><small>Ask for your local PIN when you return.</small></span><input type="checkbox" id="autoLockToggle" aria-label="Lock when app is backgrounded"></label>
-            <div class="settings-actions"><button id="changeLocalPinBtn">Change local PIN</button><button id="changeQuestionsBtn">Security questions</button><button id="regenCodeBtn">New recovery code</button></div>
-            <div class="panic-card"><div><i data-lucide="eye-off"></i><strong>Quick hide</strong><small>Instantly lock Chrona with Ctrl/⌘ + Shift + L.</small></div><button id="panicBtn" class="danger">Lock now</button></div>
-            <p id="securityMessage" class="sync-state"></p>
+
+        <div class="panel" id="dashboardPanel">
+          <div class="dash-controls">
+            <div class="field">
+              <label for="fromDate">From</label>
+              <input type="date" id="fromDate" />
+            </div>
+            <div class="field">
+              <label for="toDate">To</label>
+              <input type="date" id="toDate" />
+            </div>
+            <div class="field">
+              <label for="groupBySelect">Group by</label>
+              <select id="groupBySelect">
+                <option value="day">Day</option>
+                <option value="week" selected>Week</option>
+                <option value="month">Month</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="minHoursInput">Min hrs/day counted</label>
+              <input type="number" id="minHoursInput" value="0" min="0" step="0.5" />
+            </div>
+            <button id="generateReportBtn" class="btn-primary">
+              <i data-lucide="bar-chart-2" class="w-4 h-4"></i> Generate report
+            </button>
+          </div>
+
+          <div class="quick-range">
+            <button data-range="thisMonth">This month</button>
+            <button data-range="lastMonth">Last month</button>
+            <button data-range="thisYear">This year</button>
+            <button data-range="allTime">All time</button>
+          </div>
+
+          <div class="range-label" id="rangeLabel"></div>
+          <div class="summary" id="dashSummary"></div>
+          <div class="chart" id="dashChart"></div>
+
+          <div class="dash-actions secondary-actions">
+            <button id="exportCsvBtn"><i data-lucide="download" class="w-4 h-4"></i> Export CSV report</button>
+            <button id="printPdfBtn"><i data-lucide="file-text" class="w-4 h-4"></i> Print / save as PDF</button>
+          </div>
+          <section id="printSheet" class="print-only"></section>
+        </div>
+
+        <div class="panel" id="settingsPanel">
+          <section class="settings-hero">
+            <div class="settings-avatar"><i data-lucide="user-round"></i></div>
+            <div>
+              <span class="eyebrow">Your Chrona</span>
+              <h2 id="profileHeading">Profile & preferences</h2>
+              <p>Manage your account and privacy controls from one calm place.</p>
+            </div>
+          </section>
+          <div class="settings-stack">
+            <details class="settings-group" open>
+              <summary>
+                <span class="summary-icon"><i data-lucide="user-circle"></i></span
+                ><span><strong>Account</strong><small>Username, recovery & cloud PIN</small></span
+                ><i data-lucide="chevron-down" class="chevron"></i>
+              </summary>
+              <div class="settings-content">
+                <div class="settings-row">
+                  <div>
+                    <span class="eyebrow">Username</span><strong id="settingsUsernameText">—</strong
+                    ><small>Your permanent sign-in name.</small>
+                  </div>
+                  <input id="settingsUsername" readonly aria-label="Username" />
+                </div>
+                <div class="settings-row recovery-row">
+                  <div>
+                    <span class="eyebrow">Recovery email</span><strong>Keep account recovery available</strong
+                    ><small>Used only if you forget your cloud PIN.</small>
+                  </div>
+                  <input id="settingsEmail" type="email" autocomplete="email" placeholder="you@example.com" />
+                </div>
+                <div class="settings-actions">
+                  <button id="updateEmailBtn">Save recovery email</button
+                  ><button id="changeCloudPinBtn">Change cloud PIN</button>
+                </div>
+                <p class="settings-note">
+                  <i data-lucide="info"></i> Your email is used to restore access; it is not shown in the main app.
+                </p>
+              </div>
+            </details>
+            <details class="settings-group" id="privacyGroup">
+              <summary>
+                <span class="summary-icon"><i data-lucide="shield-check"></i></span
+                ><span><strong>Privacy lock</strong><small>Protect this device when you step away</small></span
+                ><i data-lucide="chevron-down" class="chevron"></i>
+              </summary>
+              <div class="settings-content">
+                <div class="security-empty" id="securityEmpty">
+                  <div class="security-empty-icon"><i data-lucide="lock-keyhole"></i></div>
+                  <div>
+                    <strong>Add a local privacy lock</strong>
+                    <p>Create a separate device-only PIN, recovery questions, and a recovery code.</p>
+                  </div>
+                  <button id="setupSecurityBtn" class="btn-primary">Set up lock</button>
+                </div>
+                <div id="securitySettings" hidden>
+                  <label class="preference-row"
+                    ><span
+                      ><strong>Lock when app is backgrounded</strong
+                      ><small>Ask for your local PIN when you return.</small></span
+                    ><input type="checkbox" id="autoLockToggle" aria-label="Lock when app is backgrounded"
+                  /></label>
+                  <div class="settings-actions">
+                    <button id="changeLocalPinBtn">Change local PIN</button
+                    ><button id="changeQuestionsBtn">Security questions</button
+                    ><button id="regenCodeBtn">New recovery code</button>
+                  </div>
+                  <div class="panic-card">
+                    <div>
+                      <i data-lucide="eye-off"></i><strong>Quick hide</strong
+                      ><small>Instantly lock Chrona with Ctrl/⌘ + Shift + L.</small>
+                    </div>
+                    <button id="panicBtn" class="danger">Lock now</button>
+                  </div>
+                  <p id="securityMessage" class="sync-state"></p>
+                </div>
+              </div>
+            </details>
+            <details class="settings-group">
+              <summary>
+                <span class="summary-icon"><i data-lucide="circle-help"></i></span
+                ><span><strong>Data & support</strong><small>Backups, reports, and account access</small></span
+                ><i data-lucide="chevron-down" class="chevron"></i>
+              </summary>
+              <div class="settings-content">
+                <p class="settings-note">
+                  <i data-lucide="database"></i> Your ledger is cached securely on this device and syncs when connected.
+                  Export a backup from Calendar anytime.
+                </p>
+                <p class="settings-note">
+                  <i data-lucide="lightbulb"></i> Use the Dashboard to download a CSV report or save a print-ready PDF.
+                </p>
+              </div>
+            </details>
           </div>
         </div>
-      </details>
-      <details class="settings-group">
-        <summary><span class="summary-icon"><i data-lucide="circle-help"></i></span><span><strong>Data & support</strong><small>Backups, reports, and account access</small></span><i data-lucide="chevron-down" class="chevron"></i></summary>
-        <div class="settings-content"><p class="settings-note"><i data-lucide="database"></i> Your ledger is cached securely on this device and syncs when connected. Export a backup from Calendar anytime.</p><p class="settings-note"><i data-lucide="lightbulb"></i> Use the Dashboard to download a CSV report or save a print-ready PDF.</p></div>
-      </details>
-    </div>
-  </div>
-</div>
+      </div>
 
-<footer class="note">Your private ledger is stored in this browser’s local database. Export a backup regularly to move it to another device or protect against cleared browser data. <button type="button" class="text-button" id="signOutBtn">Sign out</button></footer>
-</div>
-
-<div class="overlay" id="localSetupOverlay"><div class="modal"><h2>Set up local app lock</h2><p class="date-label">This separate PIN protects Chrona on this browser after it is unlocked. Keep your recovery code somewhere safe.</p><div class="field"><label for="localPin">Local lock PIN</label><input id="localPin" class="pin-input" type="password" inputmode="numeric" maxlength="6"></div><div class="field" style="margin-top:12px"><label for="localPinConfirm">Confirm local lock PIN</label><input id="localPinConfirm" class="pin-input" type="password" inputmode="numeric" maxlength="6"></div><div class="field" style="margin-top:12px"><label for="questionOne">Security question 1</label><select id="questionOne"></select><input id="answerOne" type="text" placeholder="Answer" style="margin-top:8px"></div><div class="field" style="margin-top:12px"><label for="questionTwo">Security question 2</label><select id="questionTwo"></select><input id="answerTwo" type="text" placeholder="Answer" style="margin-top:8px"></div><p id="localSetupError" class="account-error"></p><div class="modal-actions"><button id="localSetupCancel">Cancel</button><button id="localSetupSave" class="primary">Create local lock</button></div></div></div>
-<div class="overlay" id="recoveryCodeOverlay"><div class="modal"><h2>Your recovery code</h2><p class="date-label">This code is shown once. Store it somewhere safe before continuing.</p><p id="recoveryCodeText" style="font:600 19px 'JetBrains Mono';text-align:center;letter-spacing:1px"></p><label class="toggle"><input type="checkbox" id="recoveryCodeAck"> I have stored this code securely.</label><div class="modal-actions" style="margin-top:24px"><button id="recoveryCodeContinue" class="primary">Continue</button></div></div></div>
-<div class="overlay" id="localLockOverlay"><div class="modal"><h2>Chrona is locked</h2><p class="date-label" id="localLockLabel">Enter your local app-lock PIN.</p><input id="unlockLocalPin" class="pin-input" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password"><p id="localLockError" class="account-error"></p><div class="modal-actions"><button id="showRecoveryBtn">Recover local lock</button><button id="unlockLocalBtn" class="primary">Unlock</button></div></div></div>
-<div class="overlay" id="localRecoveryOverlay"><div class="modal"><h2>Recover local lock</h2><p class="date-label">Use your recovery code, or answer both security questions.</p><div class="field"><label for="recoverCodeInput">Recovery code</label><input id="recoverCodeInput" placeholder="CHR-XXXX-XXXX-XXXX" autocomplete="off"></div><p style="text-align:center;color:var(--text-secondary)">or</p><div id="recoveryQuestions"></div><p id="recoveryError" class="account-error"></p><div class="modal-actions"><button id="recoveryCancel">Cancel</button><button id="recoverLocalBtn" class="primary">Recover</button></div></div></div>
-<div class="overlay" id="fillOverlay">
-  <div class="modal"><h2>Fill weekdays</h2><p class="date-label">Mark each weekday in this date range as present. Existing entries will be replaced.</p>
-    <div class="field" style="margin-bottom:16px"><label for="fillFromDate">From</label><input type="date" id="fillFromDate"></div>
-    <div class="field" style="margin-bottom:16px"><label for="fillToDate">To</label><input type="date" id="fillToDate"></div>
-    <div class="field" style="margin-bottom:24px"><label for="fillHours">Hours per weekday</label><input type="number" id="fillHours" value="8" min="0" max="24" step="0.5"></div>
-    <div class="modal-actions"><button id="fillCancelBtn">Cancel</button><button id="fillSaveBtn" class="primary">Fill weekdays</button></div>
-  </div>
-</div>
-<div class="overlay" id="overlay">
-  <div class="modal">
-    <h2>Mark this day</h2>
-    <div class="date-label" id="modalDate"></div>
-    <div class="opt-row" id="optRow">
-      <button data-status="present"><span style="display:flex; align-items:center; gap:8px;"><i data-lucide="check-circle" class="w-4 h-4"></i> Present</span> <span style="color:var(--accent-green)">●</span></button>
-      <button data-status="leave"><span style="display:flex; align-items:center; gap:8px;"><i data-lucide="coffee" class="w-4 h-4"></i> Leave</span> <span style="color:var(--accent-gold)">●</span></button>
-      <button data-status="holiday"><span style="display:flex; align-items:center; gap:8px;"><i data-lucide="sun" class="w-4 h-4"></i> Holiday</span> <span style="color:var(--danger)">●</span></button>
-      <button data-status="clear"><span style="display:flex; align-items:center; gap:8px;"><i data-lucide="x-circle" class="w-4 h-4"></i> Clear entry</span></button>
+      <footer class="note">
+        Your private ledger is stored in this browser’s local database. Export a backup regularly to move it to another
+        device or protect against cleared browser data.
+        <button type="button" class="text-button" id="signOutBtn">Sign out</button>
+      </footer>
     </div>
-    <div class="hrs-row">
-      <label for="hrsInput">Hours worked:</label>
-      <input type="number" id="hrsInput" value="8" min="0" max="24" step="0.5">
-    </div>
-    <div class="note-row" style="display:flex; flex-direction:column; gap:8px; margin-bottom: 24px;">
-      <label for="noteInput" style="font-weight: 500; font-size: 13px; color: var(--text-secondary);">Note (optional):</label>
-      <textarea id="noteInput" rows="2" placeholder="Add a note..." style="font-family: 'Inter', sans-serif; font-size: 13px; padding: 10px; border: 1px solid var(--soft-border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text-primary); resize: none; box-shadow: var(--shadow-inset); outline: none;"></textarea>
-    </div>
-    <div class="modal-actions">
-      <button id="cancelBtn">Cancel</button>
-      <button id="saveBtn" class="primary">Save</button>
-    </div>
-  </div>
-</div>
 
+    <div class="overlay" id="localSetupOverlay">
+      <div class="modal">
+        <h2>Set up local app lock</h2>
+        <p class="date-label">
+          This separate PIN protects Chrona on this browser after it is unlocked. Keep your recovery code somewhere
+          safe.
+        </p>
+        <div class="field">
+          <label for="localPin">Local lock PIN</label
+          ><input id="localPin" class="pin-input" type="password" inputmode="numeric" maxlength="6" />
+        </div>
+        <div class="field" style="margin-top: 12px">
+          <label for="localPinConfirm">Confirm local lock PIN</label
+          ><input id="localPinConfirm" class="pin-input" type="password" inputmode="numeric" maxlength="6" />
+        </div>
+        <div class="field" style="margin-top: 12px">
+          <label for="questionOne">Security question 1</label
+          ><select id="questionOne"></select
+          ><input id="answerOne" type="text" placeholder="Answer" style="margin-top: 8px" />
+        </div>
+        <div class="field" style="margin-top: 12px">
+          <label for="questionTwo">Security question 2</label
+          ><select id="questionTwo"></select
+          ><input id="answerTwo" type="text" placeholder="Answer" style="margin-top: 8px" />
+        </div>
+        <p id="localSetupError" class="account-error"></p>
+        <div class="modal-actions">
+          <button id="localSetupCancel">Cancel</button
+          ><button id="localSetupSave" class="primary">Create local lock</button>
+        </div>
+      </div>
+    </div>
+    <div class="overlay" id="recoveryCodeOverlay">
+      <div class="modal">
+        <h2>Your recovery code</h2>
+        <p class="date-label">This code is shown once. Store it somewhere safe before continuing.</p>
+        <p id="recoveryCodeText" style="font: 600 19px 'JetBrains Mono'; text-align: center; letter-spacing: 1px"></p>
+        <label class="toggle"><input type="checkbox" id="recoveryCodeAck" /> I have stored this code securely.</label>
+        <div class="modal-actions" style="margin-top: 24px">
+          <button id="recoveryCodeContinue" class="primary">Continue</button>
+        </div>
+      </div>
+    </div>
+    <div class="overlay" id="localLockOverlay">
+      <div class="modal">
+        <h2>Chrona is locked</h2>
+        <p class="date-label" id="localLockLabel">Enter your local app-lock PIN.</p>
+        <input
+          id="unlockLocalPin"
+          class="pin-input"
+          type="password"
+          inputmode="numeric"
+          maxlength="6"
+          autocomplete="current-password"
+        />
+        <p id="localLockError" class="account-error"></p>
+        <div class="modal-actions">
+          <button id="showRecoveryBtn">Recover local lock</button
+          ><button id="unlockLocalBtn" class="primary">Unlock</button>
+        </div>
+      </div>
+    </div>
+    <div class="overlay" id="localRecoveryOverlay">
+      <div class="modal">
+        <h2>Recover local lock</h2>
+        <p class="date-label">Use your recovery code, or answer both security questions.</p>
+        <div class="field">
+          <label for="recoverCodeInput">Recovery code</label
+          ><input id="recoverCodeInput" placeholder="CHR-XXXX-XXXX-XXXX" autocomplete="off" />
+        </div>
+        <p style="text-align: center; color: var(--text-secondary)">or</p>
+        <div id="recoveryQuestions"></div>
+        <p id="recoveryError" class="account-error"></p>
+        <div class="modal-actions">
+          <button id="recoveryCancel">Cancel</button><button id="recoverLocalBtn" class="primary">Recover</button>
+        </div>
+      </div>
+    </div>
+    <div class="overlay" id="fillOverlay">
+      <div class="modal">
+        <h2>Fill weekdays</h2>
+        <p class="date-label">Mark each weekday in this date range as present. Existing entries will be replaced.</p>
+        <div class="field" style="margin-bottom: 16px">
+          <label for="fillFromDate">From</label><input type="date" id="fillFromDate" />
+        </div>
+        <div class="field" style="margin-bottom: 16px">
+          <label for="fillToDate">To</label><input type="date" id="fillToDate" />
+        </div>
+        <div class="field" style="margin-bottom: 24px">
+          <label for="fillHours">Hours per weekday</label
+          ><input type="number" id="fillHours" value="8" min="0" max="24" step="0.5" />
+        </div>
+        <div class="modal-actions">
+          <button id="fillCancelBtn">Cancel</button><button id="fillSaveBtn" class="primary">Fill weekdays</button>
+        </div>
+      </div>
+    </div>
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <h2>Mark this day</h2>
+        <div class="date-label" id="modalDate"></div>
+        <div class="opt-row" id="optRow">
+          <button data-status="present">
+            <span style="display: flex; align-items: center; gap: 8px"
+              ><i data-lucide="check-circle" class="w-4 h-4"></i> Present</span
+            >
+            <span style="color: var(--accent-green)">●</span>
+          </button>
+          <button data-status="leave">
+            <span style="display: flex; align-items: center; gap: 8px"
+              ><i data-lucide="coffee" class="w-4 h-4"></i> Leave</span
+            >
+            <span style="color: var(--accent-gold)">●</span>
+          </button>
+          <button data-status="holiday">
+            <span style="display: flex; align-items: center; gap: 8px"
+              ><i data-lucide="sun" class="w-4 h-4"></i> Holiday</span
+            >
+            <span style="color: var(--danger)">●</span>
+          </button>
+          <button data-status="clear">
+            <span style="display: flex; align-items: center; gap: 8px"
+              ><i data-lucide="x-circle" class="w-4 h-4"></i> Clear entry</span
+            >
+          </button>
+        </div>
+        <div class="hrs-row">
+          <label for="hrsInput">Hours worked:</label>
+          <input type="number" id="hrsInput" value="8" min="0" max="24" step="0.5" />
+        </div>
+        <div class="note-row" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px">
+          <label for="noteInput" style="font-weight: 500; font-size: 13px; color: var(--text-secondary)"
+            >Note (optional):</label
+          >
+          <textarea
+            id="noteInput"
+            rows="2"
+            placeholder="Add a note..."
+            style="
+              font-family: 'Inter', sans-serif;
+              font-size: 13px;
+              padding: 10px;
+              border: 1px solid var(--soft-border);
+              border-radius: var(--radius-sm);
+              background: var(--bg);
+              color: var(--text-primary);
+              resize: none;
+              box-shadow: var(--shadow-inset);
+              outline: none;
+            "
+          ></textarea>
+        </div>
+        <div class="modal-actions">
+          <button id="cancelBtn">Cancel</button>
+          <button id="saveBtn" class="primary">Save</button>
+        </div>
+      </div>
+    </div>
 
-
-<script type="module" src="/src/main.js"></script>
-</body>
+    <script type="module" src="/src/main.js"></script>
+  </body>
 </html>
