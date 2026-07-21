@@ -902,10 +902,10 @@ footer.note {
 .app-shell.locked {
   display: none;
 }
-/* Safe boot fallback: never leave a refreshed PWA as a blank screen if a module fails. */
+/* Start with the account gate visible, then hide it after Firebase restores a session. */
 .account-gate {
   min-height: 100vh;
-  display: grid;
+  display: none;
   place-items: center;
   padding: 24px;
 }
@@ -1396,6 +1396,7 @@ footer.note {
     padding: 0;
     color: #111;
   }
+  .account-gate,
   .sheet > header,
   .controls,
   .legend,
@@ -1407,12 +1408,18 @@ footer.note {
   .dash-controls,
   .quick-range,
   .dash-actions,
+  .range-label,
   footer,
   .refresh-btn,
   .tabs,
   .quick-actions,
-  .secondary-actions {
+  .secondary-actions,
+  #dashboardPanel > :not(#printSheet) {
     display: none !important;
+  }
+  .sheet {
+    max-width: none;
+    padding: 0;
   }
   .panel {
     display: none !important;

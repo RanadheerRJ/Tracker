@@ -29,12 +29,12 @@
       rel="stylesheet"
     />
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script type="module" crossorigin src="./assets/index-CJ0W3GHe.js"></script>
+    <script type="module" crossorigin src="./assets/index-Cr-EVJX1.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/firebase-DCdfJABe.js">
-    <link rel="stylesheet" crossorigin href="./assets/index-CLSo1zda.css">
+    <link rel="stylesheet" crossorigin href="./assets/index-DlSD3aNe.css">
   </head>
   <body>
-    <div id="accountGate" class="account-gate" aria-live="polite">
+    <div id="accountGate" class="account-gate show" aria-live="polite">
       <section class="account-card" id="registerAccountCard">
         <div class="account-mark"><i data-lucide="cloud"></i></div>
         <h1>Welcome to Chrona</h1>
@@ -134,8 +134,8 @@
           <h1>Chrona</h1>
 
           <p class="nameplate" id="nameplate"></p>
-          <p class="sub">A calm, private record of your work — always ready when you are.</p>
-          <div class="tabs">
+          <p class="sub">Track today with Chrona; turn every logged hour into progress you can see.</p>
+          <nav class="tabs" aria-label="Chrona sections">
             <button class="tab-btn active" data-tab="calendarPanel">
               <i data-lucide="calendar" class="w-4 h-4"></i> Calendar
             </button>
@@ -145,7 +145,7 @@
             <button class="tab-btn" data-tab="settingsPanel">
               <i data-lucide="settings" class="w-4 h-4"></i> Settings
             </button>
-          </div>
+          </nav>
         </header>
 
         <div class="panel active" id="calendarPanel">
