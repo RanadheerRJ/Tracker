@@ -45,6 +45,11 @@ export async function registerAccount({
   const profile = { name, username, email };
 
   try {
+    const usernameLookup = await firestoreApi.getDoc(firestoreApi.doc(firestore, 'usernames', username));
+    if (usernameLookup.exists()) {
+      throw new ChronaAuthError('That username or recovery email is already in use.');
+    }
+
     const credential = await authApi.createUserWithEmailAndPassword(auth, email, passwordFor(pin));
     user = credential.user;
 
@@ -64,7 +69,11 @@ export async function registerAccount({
 
     return { user, profile };
   } catch (error) {
-    if (user) await authApi.signOut(auth).catch(() => {});
+    if (user) {
+      if (authApi.deleteUser) await authApi.deleteUser(user).catch(() => {});
+      await authApi.signOut(auth).catch(() => {});
+    }
+    if (error instanceof ChronaAuthError) throw error;
     const message =
       error?.code === 'auth/email-already-in-use'
         ? 'That username or recovery email is already in use.'

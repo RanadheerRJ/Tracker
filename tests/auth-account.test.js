@@ -102,6 +102,39 @@ describe('auth account flow', () => {
     expect(storage.getItem('chrona-login-email-v1:alice')).toBe('alice@example.com');
   });
 
+  it('blocks taken usernames before creating a Firebase Auth user', async () => {
+    const firestoreApi = createMockFirestoreApi();
+    firestoreApi.docs.set('usernames/alice', { uid: 'existing-uid', email: 'existing@example.com' });
+    const authApi = {
+      createUserWithEmailAndPassword: vi.fn(async () => ({ user: { uid: 'new-uid' } })),
+      signOut: vi.fn(async () => {}),
+      deleteUser: vi.fn(async () => {}),
+    };
+
+    await expect(
+      registerAccount({
+        auth: {},
+        firestore: {},
+        values: {
+          name: 'Alice Example',
+          username: 'alice',
+          email: 'alice@example.com',
+          pin: '583214',
+          confirm: '583214',
+        },
+        data: {},
+        cache: createMockCache(),
+        storage: createMemoryStorage(),
+        authApi,
+        firestoreApi,
+      }),
+    ).rejects.toMatchObject({ userMessage: 'That username or recovery email is already in use.' });
+
+    expect(authApi.createUserWithEmailAndPassword).not.toHaveBeenCalled();
+    expect(authApi.deleteUser).not.toHaveBeenCalled();
+    expect(authApi.signOut).not.toHaveBeenCalled();
+  });
+
   it('surfaces duplicate registration as the existing user-facing message', async () => {
     const authApi = {
       createUserWithEmailAndPassword: vi.fn(async () => {
@@ -130,6 +163,44 @@ describe('auth account flow', () => {
         firestoreApi: createMockFirestoreApi(),
       }),
     ).rejects.toMatchObject({ userMessage: 'That username or recovery email is already in use.' });
+  });
+
+  it('deletes a just-created Auth user if Firestore registration writes fail', async () => {
+    const firestoreApi = createMockFirestoreApi();
+    firestoreApi.writeBatch = vi.fn(() => ({
+      set: vi.fn(),
+      commit: vi.fn(async () => {
+        throw new Error('permission denied');
+      }),
+    }));
+    const user = { uid: 'uid-orphan', email: 'alice@example.com' };
+    const authApi = {
+      createUserWithEmailAndPassword: vi.fn(async () => ({ user })),
+      deleteUser: vi.fn(async () => {}),
+      signOut: vi.fn(async () => {}),
+    };
+
+    await expect(
+      registerAccount({
+        auth: {},
+        firestore: {},
+        values: {
+          name: 'Alice Example',
+          username: 'alice',
+          email: 'alice@example.com',
+          pin: '583214',
+          confirm: '583214',
+        },
+        data: {},
+        cache: createMockCache(),
+        storage: createMemoryStorage(),
+        authApi,
+        firestoreApi,
+      }),
+    ).rejects.toMatchObject({ userMessage: 'Could not create your account. Please try again.' });
+
+    expect(authApi.deleteUser).toHaveBeenCalledWith(user);
+    expect(authApi.signOut).toHaveBeenCalledWith({});
   });
 
   it('keeps login errors generic and user-facing', async () => {

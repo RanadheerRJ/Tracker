@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import {
   createUserWithEmailAndPassword,
+  deleteUser,
   EmailAuthProvider,
   getAuth,
   onAuthStateChanged,
@@ -19,6 +20,7 @@ export { ADMIN_UID, firebaseConfig };
 
 export const firebaseAuthApi = {
   createUserWithEmailAndPassword,
+  deleteUser,
   EmailAuthProvider,
   onAuthStateChanged,
   reauthenticateWithCredential,

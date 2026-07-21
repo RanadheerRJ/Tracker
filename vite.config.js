@@ -1,4 +1,4 @@
-import { cp, mkdir, rename, rm, copyFile } from 'node:fs/promises';
+import { cp, copyFile, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -13,8 +13,17 @@ function chronaStaticPlugin() {
       const distDir = resolve(rootDir, 'dist');
       await mkdir(distDir, { recursive: true });
 
-      await rename(resolve(distDir, 'public/index.html'), resolve(distDir, 'index.html')).catch(() => {});
+      const indexPath = resolve(distDir, 'index.html');
+      await rename(resolve(distDir, 'public/index.html'), indexPath).catch(() => {});
       await rm(resolve(distDir, 'public'), { recursive: true, force: true });
+
+      const indexHtml = await readFile(indexPath, 'utf8');
+      await writeFile(
+        indexPath,
+        indexHtml
+          .replace(/href="\.\.\/assets\/manifest-[^"]+\.json"/, 'href="./manifest.json"')
+          .replaceAll('../assets/', './assets/'),
+      );
 
       await Promise.all([
         copyFile(resolve(rootDir, 'public/manifest.json'), resolve(distDir, 'manifest.json')),
@@ -27,6 +36,7 @@ function chronaStaticPlugin() {
 }
 
 export default defineConfig({
+  base: './',
   publicDir: false,
   server: {
     open: '/public/index.html',

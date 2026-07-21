@@ -83,6 +83,7 @@ export function bindAccountForms({
   document.getElementById('loginAccountForm').addEventListener('submit', async (event) => {
     event.preventDefault();
     const error = document.getElementById('loginAccountError');
+    error.style.color = '';
     error.textContent = '';
     try {
       await loginAccount({
@@ -120,6 +121,7 @@ export function bindAccountForms({
   document.getElementById('forgotCloudPinBtn').addEventListener('click', async () => {
     const username = usernameFor(document.getElementById('loginUsername').value);
     const error = document.getElementById('loginAccountError');
+    error.style.color = '';
     try {
       await sendCloudPinReset({ auth, firestore, username, authApi, firestoreApi });
       error.style.color = 'var(--accent-green)';
