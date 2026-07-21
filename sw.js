@@ -2,7 +2,7 @@
    Provides offline support so the app loads without a network and stays
    installable. App data itself is kept in IndexedDB (independent of this
    cache), so records survive refreshes and offline use. */
-const CACHE = 'chrona-v4-security-profile';
+const CACHE = 'chrona-v5-resilient-boot';
 
 const APP_SHELL = [
   './',

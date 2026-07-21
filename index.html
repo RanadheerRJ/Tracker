@@ -750,7 +750,8 @@
 
   /* Local account gate */
   .app-shell.locked { display: none; }
-  .account-gate { min-height: 100vh; display: none; place-items: center; padding: 24px; }
+  /* Safe boot fallback: never leave a refreshed PWA as a blank screen if a module fails. */
+  .account-gate { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
   .account-gate.show { display: grid; }
   .account-card { width: min(100%, 440px); background: var(--surface-primary); padding: 36px; border-radius: 28px; box-shadow: var(--shadow-clay); text-align: center; }
   .account-mark { width: 58px; height: 58px; border-radius: 18px; background: var(--accent-green); color: white; display: grid; place-items: center; margin: 0 auto 20px; box-shadow: 0 10px 24px rgba(47,111,83,.25); }
@@ -1106,7 +1107,7 @@ import { QUESTIONS, createAccount as createLocalAccount, loadAccount as loadLoca
   function showRecoveryCode(code){ document.getElementById('recoveryCodeText').textContent=code; document.getElementById('recoveryCodeAck').checked=false; document.getElementById('recoveryCodeOverlay').classList.add('show'); }
   function openLocalSetup(){ if(!currentUser) return; populateQuestions(); document.getElementById('localSetupError').textContent=''; localSetupOverlay.classList.add('show'); }
   function refreshSettings(){ const account=localAccount(); const username=profile?.username||''; document.getElementById('settingsUsername').value=username; document.getElementById('settingsUsernameText').textContent=username ? '@'+username : '—'; document.getElementById('profileHeading').textContent=username ? username+''s space' : 'Profile & preferences'; document.getElementById('settingsEmail').value=profile?.email||currentUser?.email||''; document.getElementById('securitySettings').hidden=!account; document.getElementById('securityEmpty').hidden=!!account; document.getElementById('setupSecurityBtn').hidden=!!account; if(account){document.getElementById('autoLockToggle').checked=account.autoLock!==false; document.getElementById('securityMessage').textContent=isWeakFallback(account)?'This browser uses a reduced security fallback. Use a current browser for the strongest protection.':'Your local privacy lock is active on this device.';} }
-  function lockPrivate(reason='locked'){ const account=localAccount(); if(!account){ signOut(auth); return; } setPrivateLock({uid:currentUser.uid, reason, lockedAt:Date.now()}); setPanicState(reason==='panic'); document.getElementById('appShell').classList.add('locked'); document.getElementById('unlockLocalPin').value=''; document.getElementById('localLockError').textContent=''; localLockOverlay.classList.add('show'); setTimeout(()=>document.getElementById('unlockLocalPin').focus(),0); }
+  function lockPrivate(reason='locked'){ const account=localAccount(); if(!account) return; setPrivateLock({uid:currentUser.uid, reason, lockedAt:Date.now()}); setPanicState(reason==='panic'); document.getElementById('appShell').classList.add('locked'); document.getElementById('unlockLocalPin').value=''; document.getElementById('localLockError').textContent=''; localLockOverlay.classList.add('show'); setTimeout(()=>document.getElementById('unlockLocalPin').focus(),0); }
   document.addEventListener('visibilitychange',()=>{const account=localAccount(); if(document.hidden && account?.autoLock!==false) lockPrivate('background');});
   document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.shiftKey&&event.key.toLowerCase()==='l'){event.preventDefault();lockPrivate('panic');}});
   document.getElementById('panicBtn').addEventListener('click',()=>lockPrivate('panic'));
@@ -1727,7 +1728,7 @@ import { QUESTIONS, createAccount as createLocalAccount, loadAccount as loadLoca
 
   initializeStorage().catch(err => {
     console.error('Chrona storage failed to initialize:', err);
-    alert('Chrona could not open its local database. Please check your browser storage settings.');
+    alert('Chrona could not open its local database. Please check your browser storage settings.'); showAccountGate('login');
   });
 })();
 </script>
