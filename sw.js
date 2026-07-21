@@ -2,13 +2,14 @@
    Provides offline support so the app loads without a network and stays
    installable. App data itself is kept in IndexedDB (independent of this
    cache), so records survive refreshes and offline use. */
-const CACHE = 'chrona-v3-firebase-cloud';
+const CACHE = 'chrona-v4-security-profile';
 
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.json',
   './firebase-config.js',
+  './local-security.js',
   './admin.html',
   'https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js',
   'https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js',

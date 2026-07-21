@@ -1,59 +1,53 @@
-# Chrona — cloud-synced timesheet PWA 
+# Chrona — cloud timesheet with a local privacy lock
 
-Chrona is an offline-first, installable timesheet calendar. Users sign in with a username and PIN, then their calendar, hours, and notes follow them across devices through Firebase Authentication and Cloud Firestore.
+Chrona is an offline-first, installable timesheet ledger. A username and cloud PIN sign a user into Firebase so the calendar follows them across devices. An optional **separate local app-lock PIN** protects an already signed-in Chrona session on a particular browser.
 
-## Features
+## Security model and boundaries
 
-- Present, Leave, and Holiday calendar statuses with hours and optional notes
-- Bulk updates; quick actions to mark today, copy a prior workday, or fill weekdays in a range
-- Dashboard summaries and daily/weekly/monthly reports
-- JSON backups, Excel-friendly CSV exports (including notes), and print/save-as-PDF timesheets
-- A local IndexedDB cache for offline read/write use; local edits sync automatically when a connection returns
-- A separate, UID-gated `admin.html` dashboard for the one configured administrator
+- **Cloud account:** Firebase Email/Password Auth stores the cloud PIN password verifier; Chrona never stores a raw cloud PIN. New accounts use a real recovery email. Username login privately resolves through the public username lookup document, so the lookup necessarily contains the account email—this is a deliberate privacy tradeoff chosen to preserve username + PIN login without a backend.
+- **Local app lock:** uses a random 16-byte salt and PBKDF2-SHA-256 with 120,000 iterations via Web Crypto. It is browser-local and separate from the cloud PIN. In old webviews without `SubtleCrypto`, Chrona uses a clearly flagged weak compatibility fallback.
+- **Not encryption:** the local app lock prevents casual same-device access only. It does not encrypt IndexedDB/localStorage records, defeat browser developer tools, or recover/replace a Firebase account on another device.
+- **No raw secrets:** local PINs, security-question answers, and recovery codes are stored only as verifiers. Recovery codes are shown once.
+
+Existing cloud users continue to log in normally. They are not reset or signed out. They can add a real recovery email from Settings to enable cloud “Forgot PIN”; legacy synthetic-address accounts otherwise continue to work but cannot receive Firebase reset mail.
+
+## Local security features
+
+After signing in, use **Settings** to set up the optional browser-local app lock:
+
+- a separate 4–6 digit local PIN;
+- two security questions, normalized then verifier-hashed;
+- a one-time `CHR-XXXX-XXXX-XXXX` recovery code, acknowledged before closing;
+- automatic locking on background/visibility change (enabled by default for newly configured locks);
+- a deliberate panic/lock action plus `Ctrl/⌘ + Shift + L`.
+
+Wrong answers to security questions give one remaining-attempt warning, then lock that path for 15 minutes. Recovery-code use remains available while questions are locked, invalidates the code, and produces a replacement code. The app keeps the stable browser keys `chrona-account-v1:<uid>`, `chrona-account-recovery-state-v1:<uid>`, `chrona-private-lock-v1`, and `chrona-panic-v1`; releases and service-worker cache changes never delete them.
 
 ## Firebase setup checklist
 
-1. **Create/select the project.** The supplied configuration in [`firebase-config.js`](firebase-config.js) currently targets `rare-inventory`. If you use a different Firebase project, replace the values in that *one file* with the Web app configuration from **Project settings → Your apps**. Never add server secrets to this static app.
-2. **Enable email/password auth.** In **Firebase console → Authentication → Sign-in method**, enable **Email/Password**. Chrona maps each lowercase username to `username@timesheetledger.app`; that address is an internal identifier, not a deliverable email address. PINs are sent to Firebase as the password with an internal `tlk_` prefix so Firebase's six-character minimum is met.
-3. **Create Firestore.** In **Firestore Database**, create a database in production mode. Deploy the contents of [`firestore.rules`](firestore.rules) in the Rules tab. Do **not** use test mode in production.
-4. **Register the developer account first.** Deploy the site, use its normal **Create account** screen, then open **Firebase console → Authentication → Users** and copy that user's UID.
-5. **Set the sole administrator.** Replace `PASTE_MY_UID_HERE` in both [`firebase-config.js`](firebase-config.js) (`ADMIN_UID`) and [`firestore.rules`](firestore.rules) (`isAdmin`). They must be identical. Publish the rules, redeploy the static site, sign in as that account, and visit `/admin.html` (for example, `https://<owner>.github.io/<repo>/admin.html`).
-6. **Deploy to GitHub Pages.** GitHub Pages HTTPS is required for PWA features and is suitable for Firebase. No application server or database hosting is required beyond Firebase.
+1. Enable **Email/Password** under Firebase Console → Authentication → Sign-in method.
+2. Create Firestore in production mode, then publish [`firestore.rules`](firestore.rules). The lookup is intentionally public to resolve username login to the user’s real Firebase email. Do not broaden ledger permissions.
+3. Confirm the web config in [`firebase-config.js`](firebase-config.js).
+4. Register your administrator account, copy its Firebase Auth UID, and put it in both `ADMIN_UID` in `firebase-config.js` and `isAdmin()` in `firestore.rules`.
+5. Publish rules again and use `/admin.html` while signed in as that UID.
 
 ## Firestore model
 
 ```
-ledgers/{uid}                 { username, name, data }
-usernames/{lowercaseUsername} { uid }
+ledgers/{uid}                 { username, name, email, data }
+usernames/{lowercaseUsername} { uid, email }
 ```
 
-`data` retains Chrona's calendar shape, such as:
+`data` remains the existing calendar map, including optional notes. Owners and the single configured admin can read/write ledgers. The admin dashboard can edit data or delete the ledger and lookup. It intentionally leaves a dormant Firebase Auth account: deleting another Auth user securely requires an Admin SDK endpoint/Cloud Function and normally Firebase Blaze.
 
-```json
-{
-  "2026-07-20": { "status": "present", "hours": 8, "note": "Client workshop" }
-}
-```
+## Offline behavior
 
-The username lookup lets the admin dashboard enumerate users. Firestore rules make each ledger readable/writable only by its owner or the configured `ADMIN_UID`; the client-side UID check on `admin.html` is only a UI gate, not the security boundary.
+Each user has an IndexedDB cache plus a mirrored `localStorage` cache. Edits made offline are retained and synced to Firestore when the connection returns. Export JSON backups regularly. Clearing browser data erases the local app lock/cache but not successfully synced cloud data.
 
-## Admin deletion policy
-
-`admin.html` can edit any ledger and delete a user's `ledgers/{uid}` and `usernames/{username}` documents. It intentionally **does not delete the Firebase Authentication account**: a static GitHub Pages client cannot securely use Firebase's privileged Admin SDK to delete another user. The result is a dormant Auth account that cannot recreate its username lookup without intervention.
-
-This choice requires no Cloud Function and remains compatible with Firebase's Spark plan. If complete Auth-account deletion is needed later, add a protected Cloud Function/Admin SDK endpoint; deploying that normally requires the Blaze pay-as-you-go plan.
-
-## Offline and backups
-
-The browser keeps a per-user IndexedDB cache and a mirrored `localStorage` cache for offline use. Cloud sync is opportunistic: local edits are retained and uploaded when the device reconnects. Export JSON regularly as a portable backup. Clearing browser/site data removes the local cache but not a successfully synced cloud ledger.
-
-## Local development
-
-PWAs and Firebase modules must run from HTTP(S), not `file://`:
+## Local test / deployment
 
 ```bash
 python3 -m http.server 8080
-# open http://localhost:8080
 ```
 
-When changing app shell files, bump the cache name in `sw.js` so installed PWA copies receive the update.
+Serve from HTTP(S), not `file://`. GitHub Pages HTTPS works for Firebase and PWA features. The service worker only clears stale asset caches; it never accesses user storage.

@@ -764,6 +764,9 @@
   .account-note { color: var(--text-secondary); font-size: 12px; margin: 18px 0 0; line-height: 1.5; }
   .text-button { width: auto; display: inline; padding: 0; border: 0; background: transparent; color: var(--accent-green); box-shadow: none; font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
   .text-button:hover { transform: none; box-shadow: none; }
+  .field-help { display:block; color:var(--text-secondary); font-size:12px; margin-top:5px; }
+  .toggle { display:flex; align-items:center; gap:9px; font-size:14px; cursor:pointer; }
+  .toggle input { width:auto; }
   .sync-state { font-size: 12px; color: var(--text-secondary); margin-top: 10px; }
   .quick-actions { display: flex; gap: 12px; flex-wrap: wrap; margin: 0 0 24px; }
   .quick-actions button { font-size: 13px; padding: 10px 14px; }
@@ -792,6 +795,7 @@
     <form id="registerAccountForm" class="account-form">
       <div><label for="accountName">Your name</label><input id="accountName" type="text" maxlength="40" autocomplete="name" required></div>
       <div><label for="accountUsername">Username</label><input id="accountUsername" type="text" maxlength="24" pattern="[A-Za-z0-9_.-]{3,24}" autocomplete="username" required></div>
+      <div><label for="accountEmail">Recovery email</label><input id="accountEmail" type="email" autocomplete="email" required><small class="field-help">Used for cloud PIN reset. It is stored in the username lookup so username login can find your Firebase account.</small></div>
       <div><label for="newPin">Choose a 4–6 digit PIN</label><input id="newPin" class="pin-input" type="password" inputmode="numeric" pattern="\d{4,6}" maxlength="6" autocomplete="new-password" required></div>
       <div><label for="confirmPin">Confirm PIN</label><input id="confirmPin" class="pin-input" type="password" inputmode="numeric" pattern="\d{4,6}" maxlength="6" autocomplete="new-password" required></div>
       <div class="account-error" id="registerAccountError"></div>
@@ -826,6 +830,7 @@
     <div class="tabs">
       <button class="tab-btn active" data-tab="calendarPanel"><i data-lucide="calendar" class="w-4 h-4"></i> Calendar</button>
       <button class="tab-btn" data-tab="dashboardPanel"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard</button>
+      <button class="tab-btn" data-tab="settingsPanel"><i data-lucide="settings" class="w-4 h-4"></i> Settings</button>
     </div>
   </header>
 
@@ -909,11 +914,28 @@
     </div>
     <section id="printSheet" class="print-only"></section>
   </div>
+
+  <div class="panel" id="settingsPanel">
+    <div class="chart"><h3>Profile & security</h3><p class="range-label">Your username is permanent because it is the unique cloud sign-in name.</p>
+      <div class="field"><label>Username</label><input id="settingsUsername" readonly></div>
+      <div class="field" style="margin-top:16px"><label for="settingsEmail">Recovery email</label><input id="settingsEmail" type="email" autocomplete="email"><small class="field-help">Required for “Forgot PIN”. This email is used as your Firebase sign-in identity and is visible in the username lookup.</small></div>
+      <div class="secondary-actions"><button id="updateEmailBtn">Update recovery email</button><button id="changeCloudPinBtn">Change cloud PIN</button><button id="setupSecurityBtn" class="btn-primary">Set up local app lock</button></div>
+    </div>
+    <div class="chart" id="securitySettings" hidden><h3>Local app lock</h3><p class="range-label">This is a browser-only privacy lock. It does not replace your cloud PIN or encrypt your timesheet database.</p>
+      <label class="toggle"><input type="checkbox" id="autoLockToggle"> Lock when Chrona leaves the foreground</label>
+      <p class="field-help">Panic shortcut: <strong>Ctrl/⌘ + Shift + L</strong>, or use the Lock now button.</p>
+      <div class="secondary-actions"><button id="changeLocalPinBtn">Change local lock PIN</button><button id="changeQuestionsBtn">Update security questions</button><button id="regenCodeBtn">Regenerate recovery code</button><button id="panicBtn" class="danger">Lock now</button></div>
+      <p id="securityMessage" class="sync-state"></p></div>
+  </div>
 </div>
 
 <footer class="note">Your private ledger is stored in this browser’s local database. Export a backup regularly to move it to another device or protect against cleared browser data. <button type="button" class="text-button" id="signOutBtn">Sign out</button></footer>
 </div>
 
+<div class="overlay" id="localSetupOverlay"><div class="modal"><h2>Set up local app lock</h2><p class="date-label">This separate PIN protects Chrona on this browser after it is unlocked. Keep your recovery code somewhere safe.</p><div class="field"><label for="localPin">Local lock PIN</label><input id="localPin" class="pin-input" type="password" inputmode="numeric" maxlength="6"></div><div class="field" style="margin-top:12px"><label for="localPinConfirm">Confirm local lock PIN</label><input id="localPinConfirm" class="pin-input" type="password" inputmode="numeric" maxlength="6"></div><div class="field" style="margin-top:12px"><label for="questionOne">Security question 1</label><select id="questionOne"></select><input id="answerOne" type="text" placeholder="Answer" style="margin-top:8px"></div><div class="field" style="margin-top:12px"><label for="questionTwo">Security question 2</label><select id="questionTwo"></select><input id="answerTwo" type="text" placeholder="Answer" style="margin-top:8px"></div><p id="localSetupError" class="account-error"></p><div class="modal-actions"><button id="localSetupCancel">Cancel</button><button id="localSetupSave" class="primary">Create local lock</button></div></div></div>
+<div class="overlay" id="recoveryCodeOverlay"><div class="modal"><h2>Your recovery code</h2><p class="date-label">This code is shown once. Store it somewhere safe before continuing.</p><p id="recoveryCodeText" style="font:600 19px 'JetBrains Mono';text-align:center;letter-spacing:1px"></p><label class="toggle"><input type="checkbox" id="recoveryCodeAck"> I have stored this code securely.</label><div class="modal-actions" style="margin-top:24px"><button id="recoveryCodeContinue" class="primary">Continue</button></div></div></div>
+<div class="overlay" id="localLockOverlay"><div class="modal"><h2>Chrona is locked</h2><p class="date-label" id="localLockLabel">Enter your local app-lock PIN.</p><input id="unlockLocalPin" class="pin-input" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password"><p id="localLockError" class="account-error"></p><div class="modal-actions"><button id="showRecoveryBtn">Recover local lock</button><button id="unlockLocalBtn" class="primary">Unlock</button></div></div></div>
+<div class="overlay" id="localRecoveryOverlay"><div class="modal"><h2>Recover local lock</h2><p class="date-label">Use your recovery code, or answer both security questions.</p><div class="field"><label for="recoverCodeInput">Recovery code</label><input id="recoverCodeInput" placeholder="CHR-XXXX-XXXX-XXXX" autocomplete="off"></div><p style="text-align:center;color:var(--text-secondary)">or</p><div id="recoveryQuestions"></div><p id="recoveryError" class="account-error"></p><div class="modal-actions"><button id="recoveryCancel">Cancel</button><button id="recoverLocalBtn" class="primary">Recover</button></div></div></div>
 <div class="overlay" id="fillOverlay">
   <div class="modal"><h2>Fill weekdays</h2><p class="date-label">Mark each weekday in this date range as present. Existing entries will be replaced.</p>
     <div class="field" style="margin-bottom:16px"><label for="fillFromDate">From</label><input type="date" id="fillFromDate"></div>
@@ -949,9 +971,10 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, updateEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
+import { QUESTIONS, createAccount as createLocalAccount, loadAccount as loadLocalAccount, verifyPin as verifyLocalPin, validPin as validLocalPin, updatePin as updateLocalPin, updateQuestions as updateLocalQuestions, regenerateRecoveryCode, acknowledgeRecoveryCode, verifyRecoveryCode, verifyQuestions, setPrivateLock, setPanicState, isWeakFallback } from "./local-security.js";
 
 (function(){
   const STORAGE_KEY = 'timesheet_ledger_v1'; // legacy localStorage key, migrated once
@@ -962,7 +985,7 @@ import { firebaseConfig } from "./firebase-config.js";
   const firebaseApp = initializeApp(firebaseConfig);
   const auth = getAuth(firebaseApp);
   const firestore = getFirestore(firebaseApp);
-  let data = {}, legacyData = {}, profile = null, currentUser = null, db, syncInFlight = false;
+  let data = {}, legacyData = {}, profile = null, currentUser = null, db, syncInFlight = false, afterRecoverySetup = false;
 
   function openDatabase(){ return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -983,15 +1006,16 @@ import { firebaseConfig } from "./firebase-config.js";
   function setGreeting(name){ document.getElementById('nameplate').textContent = name ? '— ' + name + "'s ledger" : ''; }
   function showAccountGate(mode){
     document.getElementById('appShell').classList.add('locked'); document.getElementById('accountGate').classList.add('show');
+    if(mode === 'login') document.getElementById('loginUsername').value = localStorage.getItem('chrona-last-username-v1') || '';
     document.getElementById('registerAccountCard').hidden = mode !== 'register'; document.getElementById('loginAccountCard').hidden = mode !== 'login';
     setTimeout(()=>document.getElementById(mode === 'login' ? 'loginUsername' : 'accountName').focus(),0);
   }
-  function openApp(){ document.getElementById('accountGate').classList.remove('show'); document.getElementById('appShell').classList.remove('locked'); setGreeting(profile?.name || ''); render(); }
+  function openApp(){ document.getElementById('accountGate').classList.remove('show'); document.getElementById('appShell').classList.remove('locked'); setGreeting(profile?.name || ''); render(); refreshSettings(); }
   async function save(){ if(!currentUser) return; localStorage.setItem(localCacheKey(),JSON.stringify(data)); await dbSet(ledgerKey(),data); await dbSet(pendingKey(),true); queueCloudSync(); }
   async function queueCloudSync(){
     if(syncInFlight || !currentUser || !navigator.onLine) return;
     syncInFlight = true;
-    try { await setDoc(doc(firestore,'ledgers',currentUser.uid), { username:profile.username, name:profile.name, data }); await dbSet(pendingKey(),false); }
+    try { await setDoc(doc(firestore,'ledgers',currentUser.uid), { username:profile.username, name:profile.name, email:profile.email || currentUser.email || '', data }); await dbSet(pendingKey(),false); }
     catch(error) { console.warn('Chrona will sync when a connection is available.', error); }
     finally { syncInFlight=false; }
   }
@@ -1000,7 +1024,7 @@ import { firebaseConfig } from "./firebase-config.js";
     try {
       const snapshot = await getDoc(doc(firestore,'ledgers',currentUser.uid));
       if(snapshot.exists()) {
-        const cloud = snapshot.data(); profile={name:cloud.name || profile?.name || '', username:cloud.username || profile?.username || ''};
+        const cloud = snapshot.data(); profile={name:cloud.name || profile?.name || '', username:cloud.username || profile?.username || '', email:cloud.email || profile?.email || currentUser.email || ''};
         if(!pending) { data=cloud.data && typeof cloud.data === 'object' ? cloud.data : {}; await dbSet(ledgerKey(),data); localStorage.setItem(localCacheKey(),JSON.stringify(data)); }
         await dbSet(profileKey(),profile);
       }
@@ -1018,18 +1042,51 @@ import { firebaseConfig } from "./firebase-config.js";
   document.getElementById('showLoginBtn').addEventListener('click',()=>showAccountGate('login'));
   document.getElementById('showRegisterBtn').addEventListener('click',()=>showAccountGate('register'));
   document.getElementById('registerAccountForm').addEventListener('submit',async event=>{
-    event.preventDefault(); const name=document.getElementById('accountName').value.trim(), username=usernameFor(document.getElementById('accountUsername').value), pin=document.getElementById('newPin').value, confirm=document.getElementById('confirmPin').value, error=document.getElementById('registerAccountError'); error.textContent='';
-    if(!name) return error.textContent='Please enter your name.'; if(!/^[a-z0-9_.-]{3,24}$/.test(username)) return error.textContent='Use 3–24 letters, numbers, dots, underscores, or hyphens.'; if(!validPin(pin)) return error.textContent='Choose a 4–6 digit PIN that is not all the same digit.'; if(pin!==confirm) return error.textContent='PIN entries do not match.';
-    try { const credential=await createUserWithEmailAndPassword(auth,emailFor(username),passwordFor(pin)); currentUser=credential.user; profile={name,username}; const batch=writeBatch(firestore); batch.set(doc(firestore,'ledgers',currentUser.uid),{username,name,data}); batch.set(doc(firestore,'usernames',username),{uid:currentUser.uid}); await batch.commit(); await dbSet(profileKey(),profile); await dbSet(ledgerKey(),data); localStorage.setItem(localCacheKey(),JSON.stringify(data)); await dbSet(pendingKey(),false); legacyData={}; openApp(); }
+    event.preventDefault(); const name=document.getElementById('accountName').value.trim(), username=usernameFor(document.getElementById('accountUsername').value), email=document.getElementById('accountEmail').value.trim().toLowerCase(), pin=document.getElementById('newPin').value, confirm=document.getElementById('confirmPin').value, error=document.getElementById('registerAccountError'); error.textContent='';
+    if(!name) return error.textContent='Please enter your name.'; if(!/^[a-z0-9_.-]{3,24}$/.test(username)) return error.textContent='Use 3–24 letters, numbers, dots, underscores, or hyphens.'; if(!/^\S+@\S+\.\S+$/.test(email)) return error.textContent='Enter a valid recovery email.'; if(!validPin(pin)) return error.textContent='Choose a 4–6 digit PIN that is not all the same digit.'; if(pin!==confirm) return error.textContent='PIN entries do not match.';
+    try { const credential=await createUserWithEmailAndPassword(auth,email,passwordFor(pin)); currentUser=credential.user; profile={name,username,email}; localStorage.setItem('chrona-last-username-v1',username); const batch=writeBatch(firestore); batch.set(doc(firestore,'ledgers',currentUser.uid),{username,name,email,data}); batch.set(doc(firestore,'usernames',username),{uid:currentUser.uid,email}); await batch.commit(); await dbSet(profileKey(),profile); await dbSet(ledgerKey(),data); localStorage.setItem(localCacheKey(),JSON.stringify(data)); await dbSet(pendingKey(),false); legacyData={}; openApp(); setTimeout(()=>openLocalSetup(),100); }
     catch(err) { error.textContent=err.code==='auth/email-already-in-use' ? 'That username is already taken.' : 'Could not create your account. Please try again.'; console.error(err); }
   });
   document.getElementById('loginAccountForm').addEventListener('submit',async event=>{
     event.preventDefault(); const username=usernameFor(document.getElementById('loginUsername').value), pin=document.getElementById('loginPin').value, error=document.getElementById('loginAccountError'); error.textContent='';
     if(!/^[a-z0-9_.-]{3,24}$/.test(username)||!validPin(pin)) return error.textContent='Enter your username and PIN.';
-    try { await signInWithEmailAndPassword(auth,emailFor(username),passwordFor(pin)); } catch(err) { error.textContent='That username or PIN is not correct.'; console.error(err); }
+    try { localStorage.setItem('chrona-last-username-v1',username); let loginEmail=emailFor(username); try { const lookup=await getDoc(doc(firestore,'usernames',username)); if(lookup.exists() && lookup.data().email) loginEmail=lookup.data().email; } catch(e) { /* offline legacy accounts still use the synthetic address */ } await signInWithEmailAndPassword(auth,loginEmail,passwordFor(pin)); } catch(err) { error.textContent='That username or PIN is not correct.'; console.error(err); }
   });
   document.getElementById('signOutBtn').addEventListener('click', async ()=>{ await signOut(auth); });
   window.addEventListener('online',queueCloudSync);
+  document.getElementById('loginAccountForm').insertAdjacentHTML('beforeend','<button type="button" class="text-button" id="forgotCloudPinBtn">Forgot cloud PIN?</button>');
+  document.getElementById('forgotCloudPinBtn').addEventListener('click', async ()=>{
+    const username=usernameFor(document.getElementById('loginUsername').value); const error=document.getElementById('loginAccountError');
+    if(!/^[a-z0-9_.-]{3,24}$/.test(username)) return error.textContent='Enter your username first.';
+    try { const lookup=await getDoc(doc(firestore,'usernames',username)); const email=lookup.exists() && lookup.data().email; if(!email) return error.textContent='This legacy account needs a recovery email added from Settings before cloud PIN reset is available.'; await sendPasswordResetEmail(auth,email); error.style.color='var(--accent-green)'; error.textContent='If the account exists, a reset email has been sent.'; } catch(e) { error.textContent='Could not start password reset. Please try again.'; }
+  });
+
+  // ---- Local privacy lock / recovery (browser-only, separate from cloud PIN) ----
+  const localSetupOverlay=document.getElementById('localSetupOverlay'), localLockOverlay=document.getElementById('localLockOverlay'), localRecoveryOverlay=document.getElementById('localRecoveryOverlay');
+  function localAccount(){ return currentUser ? loadLocalAccount(currentUser.uid) : null; }
+  function populateQuestions(){ const first=Math.floor(Math.random()*QUESTIONS.length); let second=Math.floor(Math.random()*(QUESTIONS.length-1)); if(second>=first) second++; ['questionOne','questionTwo'].forEach((id, position)=>{ const select=document.getElementById(id); select.innerHTML=''; QUESTIONS.forEach((question,index)=>{const option=document.createElement('option');option.value=index;option.textContent=question; if(index===(position ? second : first)) option.selected=true;select.appendChild(option);}); }); }
+  function showRecoveryCode(code){ document.getElementById('recoveryCodeText').textContent=code; document.getElementById('recoveryCodeAck').checked=false; document.getElementById('recoveryCodeOverlay').classList.add('show'); }
+  function openLocalSetup(){ if(!currentUser) return; populateQuestions(); document.getElementById('localSetupError').textContent=''; localSetupOverlay.classList.add('show'); }
+  function refreshSettings(){ const account=localAccount(); document.getElementById('settingsUsername').value=profile?.username||''; document.getElementById('settingsEmail').value=profile?.email||currentUser?.email||''; document.getElementById('securitySettings').hidden=!account; document.getElementById('setupSecurityBtn').hidden=!!account; if(account){document.getElementById('autoLockToggle').checked=account.autoLock!==false; document.getElementById('securityMessage').textContent=isWeakFallback(account)?'Warning: this browser lacks Web Crypto; local verifier uses a weaker compatibility fallback.':'Local PIN and recovery verifiers use PBKDF2-SHA-256.';} }
+  function lockPrivate(reason='locked'){ const account=localAccount(); if(!account){ signOut(auth); return; } setPrivateLock({uid:currentUser.uid, reason, lockedAt:Date.now()}); setPanicState(reason==='panic'); document.getElementById('appShell').classList.add('locked'); document.getElementById('unlockLocalPin').value=''; document.getElementById('localLockError').textContent=''; localLockOverlay.classList.add('show'); setTimeout(()=>document.getElementById('unlockLocalPin').focus(),0); }
+  document.addEventListener('visibilitychange',()=>{const account=localAccount(); if(document.hidden && account?.autoLock!==false) lockPrivate('background');});
+  document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.shiftKey&&event.key.toLowerCase()==='l'){event.preventDefault();lockPrivate('panic');}});
+  document.getElementById('panicBtn').addEventListener('click',()=>lockPrivate('panic'));
+  document.getElementById('localSetupCancel').addEventListener('click',()=>localSetupOverlay.classList.remove('show'));
+  document.getElementById('localSetupSave').addEventListener('click',async()=>{const pin=document.getElementById('localPin').value,confirm=document.getElementById('localPinConfirm').value,a1=document.getElementById('answerOne').value,a2=document.getElementById('answerTwo').value,error=document.getElementById('localSetupError');error.textContent='';if(!validLocalPin(pin))return error.textContent='Choose a non-obvious 4–6 digit local PIN.';if(pin!==confirm)return error.textContent='PIN entries do not match.';if(!a1.trim()||!a2.trim())return error.textContent='Answer both security questions.';if(document.getElementById('questionOne').value===document.getElementById('questionTwo').value)return error.textContent='Choose two different questions.';const created=await createLocalAccount(currentUser.uid,pin,[Number(document.getElementById('questionOne').value),Number(document.getElementById('questionTwo').value)],[a1,a2]);localSetupOverlay.classList.remove('show');refreshSettings();showRecoveryCode(created.recoveryCode);});
+  document.getElementById('recoveryCodeContinue').addEventListener('click',()=>{if(!document.getElementById('recoveryCodeAck').checked)return;acknowledgeRecoveryCode(currentUser.uid);document.getElementById('recoveryCodeOverlay').classList.remove('show');document.getElementById('securityMessage').textContent='Recovery code saved. It will only be shown again if regenerated.';if(afterRecoverySetup){afterRecoverySetup=false;openLocalSetup();}});
+  document.getElementById('unlockLocalBtn').addEventListener('click',async()=>{if(await verifyLocalPin(localAccount(),document.getElementById('unlockLocalPin').value)){setPrivateLock(null);setPanicState(false);localLockOverlay.classList.remove('show');document.getElementById('appShell').classList.remove('locked');}else document.getElementById('localLockError').textContent='That local PIN is not correct.';});
+  document.getElementById('showRecoveryBtn').addEventListener('click',()=>{const account=localAccount();document.getElementById('recoveryQuestions').innerHTML=account.questions.map((q,i)=>'<div class="field" style="margin-top:10px"><label>'+QUESTIONS[q.index]+'</label><input id="recoverAnswer'+i+'" type="text"></div>').join('');document.getElementById('recoverCodeInput').value='';document.getElementById('recoveryError').textContent='';localRecoveryOverlay.classList.add('show');});
+  document.getElementById('recoveryCancel').addEventListener('click',()=>localRecoveryOverlay.classList.remove('show'));
+  document.getElementById('recoverLocalBtn').addEventListener('click',async()=>{const code=document.getElementById('recoverCodeInput').value.trim(),error=document.getElementById('recoveryError');error.textContent='';let replacement=false;if(code)replacement=await verifyRecoveryCode(currentUser.uid,code.toUpperCase());if(replacement){localRecoveryOverlay.classList.remove('show');afterRecoverySetup=true;showRecoveryCode(replacement);return;}const result=await verifyQuestions(currentUser.uid,[document.getElementById('recoverAnswer0')?.value,document.getElementById('recoverAnswer1')?.value]);if(result.ok){localRecoveryOverlay.classList.remove('show');openLocalSetup();return;}error.textContent=result.lockedUntil?'Security questions are locked for 15 minutes. Use your recovery code.':result.remaining?'Answers did not match. 1 attempt remaining.':'Recovery failed.';});
+  document.getElementById('autoLockToggle').addEventListener('change',()=>{const account=localAccount();account.autoLock=document.getElementById('autoLockToggle').checked;localStorage.setItem('chrona-account-v1:'+currentUser.uid,JSON.stringify(account));document.getElementById('securityMessage').textContent='Lock preference saved.';});
+  async function requireLocalPin(action){const pin=prompt('Enter your local app-lock PIN to continue:');if(pin && await verifyLocalPin(localAccount(),pin))return action();document.getElementById('securityMessage').textContent='Current local PIN was not accepted.';}
+  document.getElementById('changeLocalPinBtn').addEventListener('click',()=>requireLocalPin(async()=>{const pin=prompt('New local PIN (4–6 digits):'),confirm=prompt('Confirm new local PIN:');if(!validLocalPin(pin||'')||pin!==confirm)return document.getElementById('securityMessage').textContent='PIN was not changed.';await updateLocalPin(currentUser.uid,pin);document.getElementById('securityMessage').textContent='Local PIN changed successfully.';}));
+  document.getElementById('changeQuestionsBtn').addEventListener('click',()=>requireLocalPin(async()=>{const account=localAccount(), first=prompt(QUESTIONS[account.questions[0].index]+'\nNew answer:'),second=prompt(QUESTIONS[account.questions[1].index]+'\nNew answer:');if(!first?.trim()||!second?.trim())return;await updateLocalQuestions(currentUser.uid,account.questions.map(q=>q.index),[first,second]);document.getElementById('securityMessage').textContent='Security answers updated successfully.';}));
+  document.getElementById('regenCodeBtn').addEventListener('click',()=>requireLocalPin(async()=>showRecoveryCode(await regenerateRecoveryCode(currentUser.uid))));
+  document.getElementById('changeCloudPinBtn').addEventListener('click',async()=>{const current=prompt('Enter your current cloud PIN:'),next=prompt('New cloud PIN (4–6 digits):'),confirm=prompt('Confirm new cloud PIN:');if(!current||!validPin(next||'')||next!==confirm)return alert('Cloud PIN was not changed.');try{await reauthenticateWithCredential(currentUser,EmailAuthProvider.credential(currentUser.email,passwordFor(current)));await updatePassword(currentUser,passwordFor(next));alert('Cloud PIN changed successfully.');}catch(e){alert('Could not change cloud PIN. Check your current PIN and try again.');}});
+  document.getElementById('updateEmailBtn').addEventListener('click',async()=>{const email=document.getElementById('settingsEmail').value.trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(email))return alert('Enter a valid email.');const cloudPin=prompt('Enter your current cloud PIN to update recovery email:');if(!cloudPin)return;try{await reauthenticateWithCredential(currentUser,EmailAuthProvider.credential(currentUser.email,passwordFor(cloudPin)));await updateEmail(currentUser,email);profile.email=email;await setDoc(doc(firestore,'ledgers',currentUser.uid),{email},{merge:true});await setDoc(doc(firestore,'usernames',profile.username),{uid:currentUser.uid,email},{merge:true});await dbSet(profileKey(),profile);alert('Recovery email updated successfully.');}catch(e){alert('Could not update email. Check your cloud PIN and try again.');}});
+
 
   const monthSelect = document.getElementById('monthSelect');
   const yearSelect = document.getElementById('yearSelect');
@@ -1415,7 +1472,7 @@ import { firebaseConfig } from "./firebase-config.js";
       document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById(btn.dataset.tab).classList.add('active');
-      if(btn.dataset.tab === 'dashboardPanel') generateReport();
+      if(btn.dataset.tab === 'dashboardPanel') generateReport(); if(btn.dataset.tab === 'settingsPanel') refreshSettings();
     });
   });
 

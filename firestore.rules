@@ -16,10 +16,13 @@ service cloud.firestore {
     match /usernames/{username} {
       // Authenticated users can list usernames. The admin dashboard then reads
       // ledgers through the admin-only branch above.
-      allow read: if request.auth != null;
+      // Username + PIN login must resolve the Firebase email before authentication.
+      // This deliberately exposes the recovery/auth email to username lookup callers.
+      allow read: if true;
       // Users may create only a lookup document that points at their own UID.
       // This is a small hardening addition to the requested base rule.
       allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update: if request.auth != null && request.resource.data.uid == request.auth.uid && resource.data.uid == request.auth.uid;
       allow delete: if isAdmin();
     }
   }
