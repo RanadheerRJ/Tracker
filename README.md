@@ -1,4 +1,4 @@
-# Chrona — cloud timesheet with a local privacy lock
+# Chrona — cloud timesheet with a local privacy lock 
 
 Chrona is an offline-first, installable timesheet ledger. A username and cloud PIN sign a user into Firebase so the calendar follows them across devices. An optional **separate local app-lock PIN** protects an already signed-in Chrona session on a particular browser.
 
