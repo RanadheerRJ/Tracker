@@ -748,10 +748,67 @@
     color: var(--text-primary);
   }
 
+  /* Local account gate */
+  .app-shell.locked { display: none; }
+  .account-gate { min-height: 100vh; display: none; place-items: center; padding: 24px; }
+  .account-gate.show { display: grid; }
+  .account-card { width: min(100%, 440px); background: var(--surface-primary); padding: 36px; border-radius: 28px; box-shadow: var(--shadow-clay); text-align: center; }
+  .account-mark { width: 58px; height: 58px; border-radius: 18px; background: var(--accent-green); color: white; display: grid; place-items: center; margin: 0 auto 20px; box-shadow: 0 10px 24px rgba(47,111,83,.25); }
+  .account-card h1 { font-size: 34px; margin-bottom: 8px; }
+  .account-copy { color: var(--text-secondary); margin: 0 auto 24px; max-width: 320px; font-size: 14px; }
+  .account-form { display: grid; gap: 14px; text-align: left; }
+  .account-form label { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; font-weight: 600; color: var(--text-secondary); }
+  .account-form input { width: 100%; }
+  .pin-input { text-align: center !important; letter-spacing: .45em; font-family: 'JetBrains Mono', monospace !important; font-size: 21px !important; }
+  .account-error { min-height: 20px; color: var(--danger); font-size: 13px; margin: 4px 0 0; text-align: center; }
+  .account-note { color: var(--text-secondary); font-size: 12px; margin: 18px 0 0; line-height: 1.5; }
+  .quick-actions { display: flex; gap: 12px; flex-wrap: wrap; margin: 0 0 24px; }
+  .quick-actions button { font-size: 13px; padding: 10px 14px; }
+  .secondary-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+  .secondary-actions button { font-size: 13px; padding: 10px 14px; }
+  .print-only { display: none; }
+  @media print {
+    body { background: #fff; padding: 0; color: #111; }
+    .sheet > header, .controls, .legend, #dowRow, #calGrid, #summary, #dashSummary, #dashChart, .dash-controls, .quick-range, .dash-actions, footer, .refresh-btn, .tabs, .quick-actions, .secondary-actions { display: none !important; }
+    .panel { display: none !important; }
+    #dashboardPanel { display: block !important; }
+    #printSheet { display: block !important; padding: 20px; }
+    #printSheet table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    #printSheet th, #printSheet td { border: 1px solid #aaa; padding: 8px; text-align: left; font-size: 12px; }
+    #printSheet h1 { font-size: 28px; }
+  }
+
 </style>
 </head>
 <body>
-
+<div id="accountGate" class="account-gate" aria-live="polite">
+  <section class="account-card" id="createAccountCard">
+    <div class="account-mark"><i data-lucide="shield-check"></i></div>
+    <h1>Your private Chrona</h1>
+    <p class="account-copy">Create a local profile and PIN to keep this device’s timesheet private.</p>
+    <form id="createAccountForm" class="account-form">
+      <div><label for="accountName">Your name</label><input id="accountName" type="text" maxlength="40" autocomplete="name" required></div>
+      <div><label for="accountUsername">Username</label><input id="accountUsername" type="text" maxlength="24" pattern="[A-Za-z0-9_.-]{3,24}" autocomplete="username" required></div>
+      <div><label for="newPin">Choose a 4–6 digit PIN</label><input id="newPin" class="pin-input" type="password" inputmode="numeric" pattern="\d{4,6}" maxlength="6" autocomplete="new-password" required></div>
+      <div><label for="confirmPin">Confirm PIN</label><input id="confirmPin" class="pin-input" type="password" inputmode="numeric" pattern="\d{4,6}" maxlength="6" autocomplete="new-password" required></div>
+      <div class="account-error" id="createAccountError"></div>
+      <button class="primary" type="submit"><i data-lucide="arrow-right"></i> Create local account</button>
+    </form>
+    <p class="account-note">This is a device-only app lock, not cloud sign-in. Export a backup regularly—clearing browser data removes this local account and its records.</p>
+  </section>
+  <section class="account-card" id="unlockAccountCard" hidden>
+    <div class="account-mark"><i data-lucide="lock-keyhole"></i></div>
+    <h1>Welcome back</h1>
+    <p class="account-copy" id="unlockCopy">Enter your PIN to open Chrona.</p>
+    <form id="unlockAccountForm" class="account-form">
+      <div><label for="unlockPin">PIN</label><input id="unlockPin" class="pin-input" type="password" inputmode="numeric" pattern="\d{4,6}" maxlength="6" autocomplete="current-password" required autofocus></div>
+      <div class="account-error" id="unlockAccountError"></div>
+      <button class="primary" type="submit"><i data-lucide="unlock"></i> Unlock Chrona</button>
+    </form>
+    <p class="account-note">Your PIN is verified locally and never sent anywhere.</p>
+  </section>
+</div>
+<div id="appShell" class="app-shell locked">
 <div class="sheet">
 
   <header style="position: relative;">
@@ -778,6 +835,11 @@
         <button id="importBtn" title="Load a previously exported file"><i data-lucide="upload" class="w-4 h-4"></i> Import</button>
         <input type="file" id="importFile" accept="application/json" style="display:none">
       </div>
+    </div>
+    <div class="quick-actions" aria-label="Quick actions">
+      <button id="markTodayBtn" class="btn-primary"><i data-lucide="calendar-check" class="w-4 h-4"></i> Mark today · 8h</button>
+      <button id="copyPreviousBtn"><i data-lucide="copy" class="w-4 h-4"></i> Copy previous workday</button>
+      <button id="fillWeekdaysBtn"><i data-lucide="calendar-range" class="w-4 h-4"></i> Fill weekdays</button>
     </div>
     <div class="legend">
       <span>Present</span>
@@ -837,26 +899,25 @@
     <div class="summary" id="dashSummary"></div>
     <div class="chart" id="dashChart"></div>
 
-    <div class="dash-actions">
+    <div class="dash-actions secondary-actions">
       <button id="exportCsvBtn"><i data-lucide="download" class="w-4 h-4"></i> Export CSV report</button>
+      <button id="printPdfBtn"><i data-lucide="file-text" class="w-4 h-4"></i> Print / save as PDF</button>
     </div>
+    <section id="printSheet" class="print-only"></section>
   </div>
 </div>
 
-<footer class="note">Data is stored locally in this browser only (localStorage). Use Export regularly to keep a backup, or to move your records to another device.</footer>
-
-<div class="overlay" id="welcomeOverlay">
-  <div class="modal welcome-modal">
-    <h2>Welcome to your Chrona</h2>
-    <p>What should we call you? This just personalizes your ledger — everything still stays saved on this device only.</p>
-    <input type="text" id="nameInput" placeholder="Your name" maxlength="40">
-    <div class="modal-actions">
-      <button id="skipNameBtn">Skip</button>
-      <button id="saveNameBtn" class="primary">Get started</button>
-    </div>
-  </div>
+<footer class="note">Your private ledger is stored in this browser’s local database. Export a backup regularly to move it to another device or protect against cleared browser data.</footer>
 </div>
 
+<div class="overlay" id="fillOverlay">
+  <div class="modal"><h2>Fill weekdays</h2><p class="date-label">Mark each weekday in this date range as present. Existing entries will be replaced.</p>
+    <div class="field" style="margin-bottom:16px"><label for="fillFromDate">From</label><input type="date" id="fillFromDate"></div>
+    <div class="field" style="margin-bottom:16px"><label for="fillToDate">To</label><input type="date" id="fillToDate"></div>
+    <div class="field" style="margin-bottom:24px"><label for="fillHours">Hours per weekday</label><input type="number" id="fillHours" value="8" min="0" max="24" step="0.5"></div>
+    <div class="modal-actions"><button id="fillCancelBtn">Cancel</button><button id="fillSaveBtn" class="primary">Fill weekdays</button></div>
+  </div>
+</div>
 <div class="overlay" id="overlay">
   <div class="modal">
     <h2>Mark this day</h2>
@@ -884,58 +945,134 @@
 
 <script>
 (function(){
-  const STORAGE_KEY = 'timesheet_ledger_v1';
+  const STORAGE_KEY = 'timesheet_ledger_v1'; // legacy localStorage key, migrated once
   const NAME_KEY = 'timesheet_ledger_user_name';
+  const DB_NAME = 'chrona-ledger';
+  const DB_VERSION = 1;
+  const DATA_RECORD = 'ledger';
+  const ACCOUNT_RECORD = 'account';
   const dowNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  let data = {};
+  let account = null;
+  let isUnlocked = false;
+  let db;
 
-  let data = {}; // { "YYYY-MM-DD": {status:'present'|'leave'|'holiday', hours:8} }
-  try{
-    data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-  }catch(e){ data = {}; }
-
+  function openDatabase(){
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      request.onupgradeneeded = () => {
+        const database = request.result;
+        if(!database.objectStoreNames.contains('app')) database.createObjectStore('app');
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+  function dbGet(key){
+    return new Promise((resolve, reject) => {
+      const request = db.transaction('app', 'readonly').objectStore('app').get(key);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+  function dbSet(key, value){
+    return new Promise((resolve, reject) => {
+      const request = db.transaction('app', 'readwrite').objectStore('app').put(value, key);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
   function save(){
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    // IndexedDB is asynchronous; each save writes the current in-memory ledger snapshot.
+    return dbSet(DATA_RECORD, data).catch(err => console.error('Could not save your ledger:', err));
   }
-
-  // ---- First-run welcome ----
-  const nameplate = document.getElementById('nameplate');
-  const welcomeOverlay = document.getElementById('welcomeOverlay');
-  const nameInput = document.getElementById('nameInput');
-
+  function bytesToBase64(bytes){ return btoa(String.fromCharCode(...bytes)); }
+  function base64ToBytes(value){ return Uint8Array.from(atob(value), c => c.charCodeAt(0)); }
+  async function pinVerifier(pin, salt){
+    const pinBytes = new TextEncoder().encode(pin);
+    const key = await crypto.subtle.importKey('raw', pinBytes, 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({name:'PBKDF2', salt:base64ToBytes(salt), iterations:120000, hash:'SHA-256'}, key, 256);
+    return bytesToBase64(new Uint8Array(bits));
+  }
+  function validPin(pin){
+    if(!/^\d{4,6}$/.test(pin)) return false;
+    if(/^(\d)\1+$/.test(pin)) return false;
+    return !['0123','1234','2345','3456','4567','5678','6789','012345','123456','234567','345678','456789'].includes(pin);
+  }
   function setGreeting(name){
-    nameplate.textContent = name ? "— " + name + "'s ledger" : '';
+    document.getElementById('nameplate').textContent = name ? "— " + name + "'s ledger" : '';
   }
-
-  function initWelcome(){
-    const storedName = localStorage.getItem(NAME_KEY);
-    if(storedName){
-      setGreeting(storedName);
+  function showAccountGate(mode){
+    document.getElementById('appShell').classList.add('locked');
+    document.getElementById('accountGate').classList.add('show');
+    document.getElementById('createAccountCard').hidden = mode !== 'create';
+    document.getElementById('unlockAccountCard').hidden = mode !== 'unlock';
+    if(mode === 'unlock'){
+      document.getElementById('unlockCopy').textContent = 'Welcome back, ' + account.name + '. Enter your PIN to open Chrona.';
+      setTimeout(() => document.getElementById('unlockPin').focus(), 0);
+    } else setTimeout(() => document.getElementById('accountName').focus(), 0);
+  }
+  function unlockApp(){
+    isUnlocked = true;
+    document.getElementById('accountGate').classList.remove('show');
+    document.getElementById('appShell').classList.remove('locked');
+    setGreeting(account.name);
+    render();
+  }
+  function lockApp(){
+    if(!isUnlocked || !account) return;
+    isUnlocked = false;
+    document.getElementById('unlockPin').value = '';
+    document.getElementById('unlockAccountError').textContent = '';
+    showAccountGate('unlock');
+  }
+  async function initializeStorage(){
+    if(!('indexedDB' in window) || !window.crypto?.subtle){
+      alert('Chrona needs a modern browser with IndexedDB and Web Crypto enabled to protect this local account.');
       return;
     }
-    welcomeOverlay.classList.add('show');
-    nameInput.focus();
-  }
-
-  function finishWelcome(name){
-    if(name){
-      localStorage.setItem(NAME_KEY, name);
+    db = await openDatabase();
+    data = await dbGet(DATA_RECORD) || {};
+    // Migrate pre-account localStorage records once, without overwriting existing IndexedDB data.
+    if(!Object.keys(data).length){
+      try {
+        const legacy = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        if(legacy && typeof legacy === 'object') { data = legacy; await save(); }
+      } catch(e) { console.warn('Legacy timesheet could not be migrated.', e); }
     }
-    setGreeting(name);
-    welcomeOverlay.classList.remove('show');
+    account = await dbGet(ACCOUNT_RECORD);
+    if(account) showAccountGate('unlock'); else showAccountGate('create');
   }
 
-  document.getElementById('saveNameBtn').addEventListener('click', ()=>{
-    finishWelcome(nameInput.value.trim());
+  document.getElementById('createAccountForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const name = document.getElementById('accountName').value.trim();
+    const username = document.getElementById('accountUsername').value.trim().toLowerCase();
+    const pin = document.getElementById('newPin').value;
+    const confirm = document.getElementById('confirmPin').value;
+    const error = document.getElementById('createAccountError');
+    error.textContent = '';
+    if(!name) return error.textContent = 'Please enter your name.';
+    if(!/^[a-z0-9_.-]{3,24}$/.test(username)) return error.textContent = 'Use 3–24 letters, numbers, dots, underscores, or hyphens.';
+    if(!validPin(pin)) return error.textContent = 'Choose a non-obvious 4–6 digit PIN.';
+    if(pin !== confirm) return error.textContent = 'PIN entries do not match.';
+    const salt = new Uint8Array(16); crypto.getRandomValues(salt);
+    account = { version: 1, provider: 'local', name, username, salt: bytesToBase64(salt), verifier: await pinVerifier(pin, bytesToBase64(salt)), createdAt: new Date().toISOString() };
+    await dbSet(ACCOUNT_RECORD, account);
+    unlockApp();
   });
-  document.getElementById('skipNameBtn').addEventListener('click', ()=>{
-    finishWelcome('');
+  document.getElementById('unlockAccountForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const pin = document.getElementById('unlockPin').value;
+    const error = document.getElementById('unlockAccountError');
+    error.textContent = '';
+    try {
+      if(await pinVerifier(pin, account.salt) !== account.verifier){ error.textContent = 'That PIN is not correct.'; document.getElementById('unlockPin').select(); return; }
+      unlockApp();
+    } catch(e) { error.textContent = 'Could not verify your PIN. Please try again.'; }
   });
-  nameInput.addEventListener('keypress', (e)=>{
-    if(e.key === 'Enter') finishWelcome(nameInput.value.trim());
-  });
-
-  initWelcome();
+  document.addEventListener('visibilitychange', () => { if(document.hidden) lockApp(); });
 
   const monthSelect = document.getElementById('monthSelect');
   const yearSelect = document.getElementById('yearSelect');
@@ -1209,8 +1346,9 @@
   yearSelect.addEventListener('change', ()=>{ clearSelection(); render(); });
 
   document.getElementById('exportBtn').addEventListener('click', async ()=>{
-    const jsonStr = JSON.stringify(data, null, 2);
-    const filename = 'timesheet-backup.json';
+    const backup = { schemaVersion: 2, exportedAt: new Date().toISOString(), app: 'Chrona', entries: data };
+    const jsonStr = JSON.stringify(backup, null, 2);
+    const filename = 'chrona-backup_' + new Date().toISOString().slice(0,10) + '.json';
     const blob = new Blob([jsonStr], {type:'application/json'});
 
     try {
@@ -1246,8 +1384,17 @@
     const reader = new FileReader();
     reader.onload = (evt)=>{
       try{
-        const imported = JSON.parse(evt.target.result);
-        data = Object.assign({}, data, imported);
+        const parsed = JSON.parse(evt.target.result);
+        const imported = parsed && parsed.entries ? parsed.entries : parsed; // accepts legacy v1 backups
+        if(!imported || typeof imported !== 'object' || Array.isArray(imported)) throw new Error('Invalid backup');
+        const clean = {};
+        Object.entries(imported).forEach(([key, entry]) => {
+          if(!/^\d{4}-\d{2}-\d{2}$/.test(key) || !entry || !['present','leave','holiday'].includes(entry.status)) return;
+          clean[key] = { status: entry.status, hours: Number.isFinite(Number(entry.hours)) ? Number(entry.hours) : 0 };
+          if(typeof entry.note === 'string' && entry.note.trim()) clean[key].note = entry.note.trim().slice(0, 500);
+        });
+        if(!Object.keys(clean).length && Object.keys(imported).length) throw new Error('No valid entries');
+        data = Object.assign({}, data, clean);
         save();
         render();
       }catch(err){
@@ -1258,8 +1405,48 @@
     e.target.value = '';
   });
 
+  // ---- Quick actions ----
+  function isoLocal(date){ return date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0'); }
+  document.getElementById('markTodayBtn').addEventListener('click', ()=>{
+    const today = new Date(); const key = isoLocal(today);
+    data[key] = { status: 'present', hours: 8 };
+    monthSelect.value = today.getMonth(); yearSelect.value = today.getFullYear(); save(); render();
+  });
+  document.getElementById('copyPreviousBtn').addEventListener('click', ()=>{
+    const today = new Date(); let cursor = new Date(today);
+    cursor.setDate(cursor.getDate() - 1);
+    while(cursor.getDay() === 0 || cursor.getDay() === 6) cursor.setDate(cursor.getDate() - 1);
+    const source = data[isoLocal(cursor)];
+    if(!source){ alert('There is no entry for the previous workday to copy.'); return; }
+    const key = isoLocal(today);
+    data[key] = { ...source };
+    monthSelect.value = today.getMonth(); yearSelect.value = today.getFullYear(); save(); render();
+  });
+  const fillOverlay = document.getElementById('fillOverlay');
+  document.getElementById('fillWeekdaysBtn').addEventListener('click', ()=>{
+    const today = isoLocal(new Date());
+    document.getElementById('fillFromDate').value = today;
+    document.getElementById('fillToDate').value = today;
+    document.getElementById('fillHours').value = 8;
+    fillOverlay.classList.add('show');
+  });
+  document.getElementById('fillCancelBtn').addEventListener('click', ()=> fillOverlay.classList.remove('show'));
+  document.getElementById('fillSaveBtn').addEventListener('click', ()=>{
+    const from = document.getElementById('fillFromDate').value;
+    const to = document.getElementById('fillToDate').value;
+    const hours = Number(document.getElementById('fillHours').value);
+    if(!from || !to || from > to || !Number.isFinite(hours) || hours < 0 || hours > 24){ alert('Enter a valid date range and hours from 0 to 24.'); return; }
+    const cursor = new Date(from + 'T00:00:00'), end = new Date(to + 'T00:00:00');
+    while(cursor <= end){
+      if(cursor.getDay() !== 0 && cursor.getDay() !== 6) data[isoLocal(cursor)] = { status: 'present', hours };
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    monthSelect.value = new Date(from + 'T00:00:00').getMonth(); yearSelect.value = new Date(from + 'T00:00:00').getFullYear();
+    fillOverlay.classList.remove('show'); save(); render();
+  });
+  fillOverlay.addEventListener('click', e => { if(e.target === fillOverlay) fillOverlay.classList.remove('show'); });
+
   // ---- Tabs ----
-  
   document.getElementById('refreshAppBtn').addEventListener('click', ()=>{
     window.location.reload();
   });
@@ -1425,14 +1612,15 @@
     const from = fromDateInput.value;
     const to = toDateInput.value;
     const minHours = parseFloat(minHoursInput.value || 0);
-    let rows = [['Date','Status','Hours']];
+    let rows = [['Date','Status','Hours','Note']];
     Object.keys(data).sort().forEach(key=>{
       if(key < from || key > to) return;
       const entry = data[key];
       if(entry.status === 'present' && (entry.hours || 0) < minHours) return;
-      rows.push([key, entry.status, entry.hours != null ? entry.hours : '']);
+      rows.push([key, entry.status, entry.hours != null ? entry.hours : '', entry.note || '']);
     });
-    const csv = rows.map(r=>r.join(',')).join('\n');
+    const csvEscape = value => '"' + String(value).replace(/"/g, '""') + '"';
+    const csv = rows.map(r=>r.map(csvEscape).join(',')).join('\n');
     const filename = 'timesheet-report_' + from + '_to_' + to + '.csv';
     const blob = new Blob([csv], {type:'text/csv'});
 
@@ -1460,7 +1648,19 @@
     setTimeout(() => URL.revokeObjectURL(url), 100);
   });
 
-  render();
+  document.getElementById('printPdfBtn').addEventListener('click', ()=>{
+    const from = fromDateInput.value, to = toDateInput.value;
+    const entries = Object.keys(data).sort().filter(key => key >= from && key <= to).map(key => [key, data[key]]);
+    const totalHours = entries.reduce((sum, [,entry]) => sum + (entry.status === 'present' ? Number(entry.hours || 0) : 0), 0);
+    const esc = value => String(value || '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    document.getElementById('printSheet').innerHTML = '<h1>Chrona Timesheet</h1><p><strong>' + esc(account?.name) + '</strong><br>Period: ' + esc(from) + ' to ' + esc(to) + '<br>Total present hours: <strong>' + totalHours + '</strong></p><table><thead><tr><th>Date</th><th>Status</th><th>Hours</th><th>Note</th></tr></thead><tbody>' + entries.map(([key, entry]) => '<tr><td>' + esc(key) + '</td><td>' + esc(entry.status) + '</td><td>' + esc(entry.hours) + '</td><td>' + esc(entry.note) + '</td></tr>').join('') + '</tbody></table><p style="margin-top:40px">Signature: ______________________________</p>';
+    window.print();
+  });
+
+  initializeStorage().catch(err => {
+    console.error('Chrona storage failed to initialize:', err);
+    alert('Chrona could not open its local database. Please check your browser storage settings.');
+  });
 })();
 </script>
 

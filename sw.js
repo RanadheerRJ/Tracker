@@ -1,8 +1,8 @@
 /* Timesheet Ledger — service worker
    Provides offline support so the app loads without a network and stays
-   installable. App data itself is kept in localStorage (independent of this
+   installable. App data itself is kept in IndexedDB (independent of this
    cache), so records survive refreshes and offline use. */
-const CACHE = 'timesheet-ledger-v1';
+const CACHE = 'chrona-v2-local-account';
 
 const APP_SHELL = [
   './',

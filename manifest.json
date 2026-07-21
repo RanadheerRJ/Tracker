@@ -1,7 +1,7 @@
 {
   "name": "Chrona",
   "short_name": "Chrona",
-  "description": "Track work days, leave, and holidays in a vintage ledger. Your records are saved locally on this device.",
+  "description": "Track work days, leave, and holidays in a vintage ledger. Your records stay private in this browser on this device.",
   "id": "/?timesheet-ledger",
   "start_url": "./index.html",
   "scope": "./",

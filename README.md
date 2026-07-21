@@ -1,45 +1,44 @@
-# Timesheet Ledger — PWA
+# Chrona — private timesheet PWA
 
-Your Timesheet Ledger is now an installable Progressive Web App. It works offline
-and remembers everything you enter (data is stored in the browser's `localStorage`,
-so it survives refreshes, app restarts, and being offline).
+Chrona is an installable, offline-first timesheet ledger. Track attendance, hours and notes in a calendar, review reports, and export records without a hosted backend.
 
-## What was added
+## Local account and privacy
 
-| File | Purpose |
-|------|---------|
-| `index.html` | Now includes the manifest link, theme color, iOS home-screen meta tags, favicons, safe-area insets, and service-worker registration. |
-| `manifest.json` | Tells the OS/browser how to install the app (name, icons, colors, standalone display). |
-| `sw.js` | Service worker — caches the app shell + Google Fonts so it loads with no connection and qualifies for installation. |
-| `icons/` | App icons (192/512 standard + maskable for Android, plus an Apple touch icon and favicons). |
+On first open, Chrona asks for a name, local username, and 4–6 digit PIN. This is a **device-only app lock** designed to prevent casual access on a shared device:
 
-## How to install / add to Home Screen
+- The PIN is never stored in readable form. It is verified locally using a salted PBKDF2/SHA-256 verifier.
+- Chrona locks when the app/browser leaves the foreground and requires the PIN to reopen it.
+- There is no server account, email sign-in, cloud sync, or cross-device login. GitHub Pages can host the app because all information remains in the user’s browser.
+- A person with browser developer tools or access to the browser profile can still access/delete local data. This is not full disk-level encryption.
 
-> PWAs must be served over **HTTPS** from a real server — they will **not** install if
-> you just open `index.html` from the file system (`file://`). Deploy the folder to any
-> static host (Netlify, Vercel, GitHub Pages, Cloudflare Pages, your own server, etc.).
+Entries are stored in **IndexedDB** (`chrona-ledger`) rather than localStorage. Existing `timesheet_ledger_v1` entries are migrated automatically on first launch. Clearing site data or uninstalling the browser can erase both the account and ledger, so export backups regularly.
 
-- **Android (Chrome/Edge):** open the URL → menu (⋮) → **Add to Home screen** / **Install app**.
-- **iPhone/iPad (Safari):** open the URL → Share → **Add to Home Screen**. (iOS uses the
-  apple-touch-icon + apple meta tags rather than the manifest.)
-- **Desktop (Chrome/Edge):** open the URL → click the **install** icon in the address bar,
-  or use the menu → **Install Timesheet Ledger**.
+## Features
 
-## Quick local test
+- Calendar statuses: Present, Leave, and Holiday; hours and optional notes
+- Bulk marking and quick actions: mark today, copy the previous workday, and fill weekdays over a date range
+- Dashboard summaries and daily/weekly/monthly hour breakdowns
+- JSON backup export/import with validation and legacy backup support
+- Excel-friendly CSV reports with properly escaped notes
+- Print-ready time sheet—choose **Print / save as PDF** in the dashboard and select “Save as PDF” in your browser’s print dialog
+- Offline PWA shell and install support
 
-A service worker needs `http(s)`, so run a tiny local server instead of opening the file directly:
+## Install / local test
+
+PWAs require `http(s)`—do not open `index.html` using `file://`.
 
 ```bash
 # from this folder
 python3 -m http.server 8080
-# then open http://localhost:8080  (Chrome's Install prompt appears in the address bar)
+# visit http://localhost:8080
 ```
 
-Use Chrome DevTools → **Application** tab to inspect the **Manifest**, **Service Workers**,
-and **Storage** (localStorage) to confirm everything is registered.
+- **Android / Chrome / Edge:** browser menu → **Install app** or **Add to Home screen**.
+- **iPhone / iPad Safari:** Share → **Add to Home Screen**.
+- **Desktop Chrome / Edge:** select the install icon in the address bar.
 
-## Where the data lives
+## Deployment on GitHub Pages
 
-All entries are saved in `localStorage` under the keys `timesheet_ledger_v1` (your days)
-and `timesheet_ledger_user_name` (your name). Use the in-app **Export** button regularly to
-keep a JSON backup, or **Import** to restore/move your records to another device.
+Deploy the repository as a static GitHub Pages site. GitHub Pages serves HTTPS, which is required for the service worker, IndexedDB-backed PWA experience, and Web Crypto PIN verification. No environment variables, database, or backend setup are needed.
+
+Whenever `index.html`, the manifest, or assets change, update the `CACHE` value in `sw.js` so installed copies fetch the new app shell.
