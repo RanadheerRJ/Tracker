@@ -100,7 +100,12 @@ export function bindAccountForms({
   });
 
   document.getElementById('signOutBtn').addEventListener('click', async () => {
-    await authApi.signOut(auth);
+    try {
+      await authApi.signOut(auth);
+    } catch (error) {
+      console.error(error);
+      alert('Could not sign out. Please try again.');
+    }
   });
 
   document

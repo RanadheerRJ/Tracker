@@ -2,7 +2,9 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // IMPORTANT: Keep this UID in sync with ADMIN_UID in firebase-config.js.
+    // IMPORTANT: Keep this UID in sync with VITE_FIREBASE_ADMIN_UID (exported as
+    // ADMIN_UID in firebase-config.js). Run `npm run check:admin-uid` before
+    // deploying whenever either value changes.
     // Replace it after you register the developer's first account.
     function isAdmin() {
       return request.auth != null && request.auth.uid == "2IK84bj7G8MUknA513sElThOQB42";

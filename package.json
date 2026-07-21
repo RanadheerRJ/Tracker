@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "check:syntax": "node scripts/check-syntax.mjs",
+    "check:admin-uid": "node scripts/check-admin-uid.mjs",
     "test": "echo \"No tests configured yet.\""
   },
   "repository": {

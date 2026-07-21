@@ -11,6 +11,7 @@ export const firebaseConfig = {
 };
 
 // Manual sync point: VITE_FIREBASE_ADMIN_UID must match firestore.rules isAdmin().
+// Run `npm run check:admin-uid` before deploying after changing either value.
 // Prefer server-side custom claims in a future iteration so this is not duplicated.
 export const ADMIN_UID = import.meta.env.VITE_FIREBASE_ADMIN_UID || '';
 
