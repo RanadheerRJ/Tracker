@@ -5,7 +5,7 @@ service cloud.firestore {
     // IMPORTANT: Keep this UID in sync with ADMIN_UID in firebase-config.js.
     // Replace it after you register the developer's first account.
     function isAdmin() {
-      return request.auth != null && request.auth.uid == "PASTE_MY_UID_HERE";
+      return request.auth != null && request.auth.uid == "2IK84bj7G8MUknA513sElThOQB42";
     }
 
     match /ledgers/{uid} {

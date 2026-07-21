@@ -13,4 +13,4 @@ export const firebaseConfig = {
 
 // Keep this value identical to the one in firestore.rules.
 // Replace only after registering your first Chrona account and copying its Auth UID.
-export const ADMIN_UID = "PASTE_MY_UID_HERE";
+export const ADMIN_UID = "2IK84bj7G8MUknA513sElThOQB42";
