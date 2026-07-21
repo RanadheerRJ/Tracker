@@ -29,6 +29,7 @@ function chronaStaticPlugin() {
         copyFile(resolve(rootDir, 'public/manifest.json'), resolve(distDir, 'manifest.json')),
         copyFile(resolve(rootDir, 'public/sw.js'), resolve(distDir, 'sw.js')),
         copyFile(resolve(rootDir, 'public/styles.css'), resolve(distDir, 'styles.css')),
+        copyFile(resolve(rootDir, 'public/logo.png'), resolve(distDir, 'logo.png')),
         writeFile(resolve(distDir, '.nojekyll'), ''),
         cp(resolve(rootDir, 'public/icons'), resolve(distDir, 'icons'), { recursive: true }),
       ]);

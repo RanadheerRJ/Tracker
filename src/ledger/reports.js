@@ -1,5 +1,42 @@
 import { escapeHtml, monthNames, refreshIcons, toISO } from '../lib/utils.js';
 
+const REPORT_LOGO_SRC = './logo.png';
+const EXPECTED_HOURS_PER_WORKDAY = 8;
+
+function employeeIdRole(profile) {
+  const employeeId = profile?.employeeId || profile?.employeeID || profile?.employeeNumber || '';
+  const role = profile?.role || profile?.title || '';
+  if (employeeId && role) return employeeId + ' / ' + role;
+  return employeeId || role || '—';
+}
+
+function formatGeneratedAt(date = new Date()) {
+  return date.toLocaleString([], {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function countWeekdaysInRange(from, to) {
+  if (!from || !to || from > to) return 0;
+  const cursor = new Date(from + 'T00:00:00');
+  const end = new Date(to + 'T00:00:00');
+  let days = 0;
+  while (cursor <= end) {
+    const day = cursor.getDay();
+    if (day !== 0 && day !== 6) days++;
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return days;
+}
+
+function reportStatusClass(status) {
+  return ['present', 'leave', 'holiday'].includes(status) ? status : 'other';
+}
+
 export function bucketKey(dateStr, groupBy) {
   if (groupBy === 'month') return dateStr.slice(0, 7);
   if (groupBy === 'week') {
@@ -209,6 +246,7 @@ export function createReportsController({ getData, getProfile }) {
     document.getElementById('printPdfBtn').addEventListener('click', () => {
       const from = fromDateInput.value;
       const to = toDateInput.value;
+      const profile = getProfile() || {};
       const entries = Object.keys(getData())
         .sort()
         .filter((key) => key >= from && key <= to)
@@ -217,26 +255,52 @@ export function createReportsController({ getData, getProfile }) {
         (sum, [, entry]) => sum + (entry.status === 'present' ? Number(entry.hours || 0) : 0),
         0,
       );
+      const leaveEntries = entries.filter(([, entry]) => entry.status === 'leave');
+      const leaveDays = leaveEntries.length;
+      const leaveHours = leaveEntries.reduce((sum, [, entry]) => sum + Number(entry.hours || 0), 0);
+      const workingDaysInPeriod = countWeekdaysInRange(from, to);
+      const expectedHours = workingDaysInPeriod * EXPECTED_HOURS_PER_WORKDAY;
+      const attendancePercentage = expectedHours > 0 ? ((totalHours / expectedHours) * 100).toFixed(1) + '%' : '—';
       document.getElementById('printSheet').innerHTML =
-        '<h1>Chrona Timesheet</h1><p><strong>' +
-        escapeHtml(getProfile()?.name) +
-        '</strong><br>Period: ' +
+        '<header class="report-header"><div class="report-logo-slot"><img src="' +
+        escapeHtml(REPORT_LOGO_SRC) +
+        '" alt="Chrona logo" class="report-logo"></div><div><h1>Chrona Timesheet</h1><p class="report-period">Period: ' +
         escapeHtml(from) +
         ' to ' +
         escapeHtml(to) +
-        '<br>Total present hours: <strong>' +
+        '</p></div></header><section class="report-employee"><p class="report-employee-name"><strong>' +
+        escapeHtml(profile.name) +
+        '</strong></p><div class="report-info-grid"><div><span>Employee ID / role</span><strong>' +
+        escapeHtml(employeeIdRole(profile)) +
+        '</strong></div><div><span>Department</span><strong>' +
+        escapeHtml(profile.department || '—') +
+        '</strong></div><div><span>Manager name</span><strong>' +
+        escapeHtml(profile.managerName || profile.manager || '—') +
+        '</strong></div><div><span>Report generated</span><strong>' +
+        escapeHtml(formatGeneratedAt()) +
+        '</strong></div></div></section><section class="report-summary-grid"><div><span>Total present hours</span><strong>' +
         totalHours +
-        '</strong></p><table><thead><tr><th>Date</th><th>Status</th><th>Hours</th><th>Note</th></tr></thead><tbody>' +
+        '</strong></div><div><span>Total leave days / hours</span><strong>' +
+        leaveDays +
+        ' days / ' +
+        leaveHours +
+        'h</strong></div><div><span>Total working days in period</span><strong>' +
+        workingDaysInPeriod +
+        ' days</strong></div><div><span>Attendance percentage</span><strong>' +
+        attendancePercentage +
+        '</strong></div></section><table><thead><tr><th>Date</th><th>Status</th><th>Hours</th><th>Note</th></tr></thead><tbody>' +
         entries
           .map(
             ([key, entry]) =>
               '<tr><td>' +
               escapeHtml(key) +
-              '</td><td>' +
+              '</td><td><span class="report-status report-status-' +
+              reportStatusClass(entry.status) +
+              '">' +
               escapeHtml(entry.status) +
-              '</td><td>' +
+              '</span></td><td>' +
               escapeHtml(entry.hours) +
-              '</td><td>' +
+              '</td><td class="report-note">' +
               escapeHtml(entry.note) +
               '</td></tr>',
           )
