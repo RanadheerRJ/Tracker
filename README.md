@@ -4,7 +4,7 @@
 
 Chrona is an offline-first, installable timesheet ledger. A username and cloud PIN sign a user into Firebase so the calendar follows them across devices. An optional **separate local app-lock PIN** protects an already signed-in Chrona session on a particular browser.
 
-## Security model and boundaries
+## Security model and boundaries 
 
 - **Cloud account:** Firebase Email/Password Auth stores the cloud PIN password verifier; Chrona never stores a raw cloud PIN. New accounts use a real recovery email. Username login privately resolves through the public username lookup document, so the lookup necessarily contains the account email—this is a deliberate privacy tradeoff chosen to preserve username + PIN login without a backend.
 - **Local app lock:** uses a random 16-byte salt and PBKDF2-SHA-256 with 120,000 iterations via Web Crypto. It is browser-local and separate from the cloud PIN. In old webviews without `SubtleCrypto`, Chrona uses a clearly flagged weak compatibility fallback.
