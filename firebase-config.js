@@ -1,16 +1,28 @@
-// Firebase web configuration — this is the only client configuration file.
-// Firebase API keys identify a web project and are safe to ship in a browser app;
-// Firestore Security Rules are the security boundary. Do not put server secrets here.
+// Firebase web configuration is injected by Vite from environment variables.
+// Copy .env.example to .env for local development; do not commit real .env files.
 export const firebaseConfig = {
-  apiKey: "AIzaSyCiA6ZLH7mF0AKolARUQlVuc0gXG2K53iI",
-  authDomain: "rare-inventory.firebaseapp.com",
-  projectId: "rare-inventory",
-  storageBucket: "rare-inventory.firebasestorage.app",
-  messagingSenderId: "1040851101163",
-  appId: "1:1040851101163:web:af54f184ad945f203365ae",
-  measurementId: "G-J88K8SZ9MT"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// Keep this value identical to the one in firestore.rules.
-// Replace only after registering your first Chrona account and copying its Auth UID.
-export const ADMIN_UID = "2IK84bj7G8MUknA513sElThOQB42";
+// Manual sync point: VITE_FIREBASE_ADMIN_UID must match firestore.rules isAdmin().
+// Prefer server-side custom claims in a future iteration so this is not duplicated.
+export const ADMIN_UID = import.meta.env.VITE_FIREBASE_ADMIN_UID || '';
+
+export const REQUIRED_FIREBASE_ENV = [
+  'VITE_FIREBASE_API_KEY',
+  'VITE_FIREBASE_AUTH_DOMAIN',
+  'VITE_FIREBASE_PROJECT_ID',
+  'VITE_FIREBASE_STORAGE_BUCKET',
+  'VITE_FIREBASE_MESSAGING_SENDER_ID',
+  'VITE_FIREBASE_APP_ID',
+];
+
+export function missingFirebaseEnv(env = import.meta.env) {
+  return REQUIRED_FIREBASE_ENV.filter((key) => !env[key]);
+}
