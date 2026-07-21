@@ -36,7 +36,7 @@ Run the app locally:
 npm run dev
 ```
 
-Vite serves the app from `/public/index.html` in development and bundles it to `dist/` for production.
+Vite serves the app from `/public/index.html` in development and bundles the GitHub Pages-ready static site to `docs/` for production.
 
 Useful checks:
 
@@ -92,9 +92,9 @@ usernames/{lowercaseUsername} { uid, email }
 
 ## Deployment
 
-There is currently no `firebase.json` or `.firebaserc` in this repository. The documented live URL is GitHub Pages, so the current production artifact is the static Vite build in `dist/`.
+There is currently no `firebase.json` or `.firebaserc` in this repository. The documented live URL is GitHub Pages, so this repo now commits the static Vite build in `docs/` for branch-based GitHub Pages deployment.
 
-Recommended static-hosting flow:
+Recommended verification flow before publishing a new build:
 
 ```bash
 npm ci
@@ -104,9 +104,15 @@ npm test
 npm run build
 ```
 
-Deploy the generated `dist/` directory to the configured static host/GitHub Pages target. If this repository is using GitHub Pages from a branch, publish the contents of `dist/` to that Pages source. If it is using GitHub Actions, configure the workflow to upload `dist/` as the Pages artifact after the build succeeds.
+`npm run build` refreshes `docs/`. Commit and push the updated `docs/` folder with the source changes.
 
-If you decide to move hosting to Firebase Hosting later, initialize hosting once with `dist` as the public directory, keep `npm run build` before deploy, then use:
+### GitHub Pages branch deployment
+
+In GitHub: **Settings → Pages → Build and deployment → Source: Deploy from a branch**. Select the branch containing these changes, then select the `/docs` folder. GitHub Pages will serve the latest committed `docs/` build at the repository Pages URL.
+
+A small root `index.html` redirects to `docs/` as a fallback if Pages is accidentally pointed at the repository root, but `/docs` is the intended Pages source.
+
+If you decide to move hosting to Firebase Hosting later, initialize hosting once with `docs` as the public directory, keep `npm run build` before deploy, then use:
 
 ```bash
 firebase deploy --only hosting,firestore:rules

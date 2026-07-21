@@ -4,7 +4,7 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['dist/**', 'coverage/**', 'node_modules/**'],
+    ignores: ['dist/**', 'docs/**', 'coverage/**', 'node_modules/**'],
   },
   js.configs.recommended,
   prettier,

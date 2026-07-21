@@ -10,7 +10,7 @@ function chronaStaticPlugin() {
   return {
     name: 'chrona-static-layout',
     async closeBundle() {
-      const distDir = resolve(rootDir, 'dist');
+      const distDir = resolve(rootDir, 'docs');
       await mkdir(distDir, { recursive: true });
 
       const indexPath = resolve(distDir, 'index.html');
@@ -29,6 +29,7 @@ function chronaStaticPlugin() {
         copyFile(resolve(rootDir, 'public/manifest.json'), resolve(distDir, 'manifest.json')),
         copyFile(resolve(rootDir, 'public/sw.js'), resolve(distDir, 'sw.js')),
         copyFile(resolve(rootDir, 'public/styles.css'), resolve(distDir, 'styles.css')),
+        writeFile(resolve(distDir, '.nojekyll'), ''),
         cp(resolve(rootDir, 'public/icons'), resolve(distDir, 'icons'), { recursive: true }),
       ]);
     },
@@ -42,7 +43,7 @@ export default defineConfig({
     open: '/public/index.html',
   },
   build: {
-    outDir: 'dist',
+    outDir: 'docs',
     emptyOutDir: true,
     rollupOptions: {
       input: {
