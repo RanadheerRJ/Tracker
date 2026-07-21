@@ -2,12 +2,17 @@
    Provides offline support so the app loads without a network and stays
    installable. App data itself is kept in IndexedDB (independent of this
    cache), so records survive refreshes and offline use. */
-const CACHE = 'chrona-v2-local-account';
+const CACHE = 'chrona-v3-firebase-cloud';
 
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.json',
+  './firebase-config.js',
+  './admin.html',
+  'https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js',
+  'https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js',
+  'https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-192.png',
@@ -72,7 +77,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Google Fonts: stale-while-revalidate so typography works offline after first visit.
-  if (url.origin === 'https://fonts.googleapis.com' || url.origin === 'https://fonts.gstatic.com') {
+  if (url.origin === 'https://fonts.googleapis.com' || url.origin === 'https://fonts.gstatic.com' || url.origin === 'https://www.gstatic.com') {
     event.respondWith(
       caches.match(req).then((cached) => {
         const network = fetch(req).then((res) => {

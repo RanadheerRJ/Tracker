@@ -1,0 +1,26 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // IMPORTANT: Keep this UID in sync with ADMIN_UID in firebase-config.js.
+    // Replace it after you register the developer's first account.
+    function isAdmin() {
+      return request.auth != null && request.auth.uid == "PASTE_MY_UID_HERE";
+    }
+
+    match /ledgers/{uid} {
+      allow read, write: if request.auth != null &&
+        (request.auth.uid == uid || isAdmin());
+    }
+
+    match /usernames/{username} {
+      // Authenticated users can list usernames. The admin dashboard then reads
+      // ledgers through the admin-only branch above.
+      allow read: if request.auth != null;
+      // Users may create only a lookup document that points at their own UID.
+      // This is a small hardening addition to the requested base rule.
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F7F4EC">
+  <title>Chrona — Admin</title>
+  <!--
+    Separate admin URL by design: this page has no public navigation and renders
+    data only after Firebase Authentication confirms the UID equals ADMIN_UID.
+    Firestore rules remain the real security boundary; this client-side check is
+    solely a safer UI gate. Keep ADMIN_UID synchronized with firestore.rules.
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#EFE7D8; --surface:#F7F4EC; --card:#fff; --green:#2F6F53; --gold:#C89B3C; --ink:#2A2E43; --muted:#676767; --danger:#B64C4C; --shadow:8px 8px 18px rgba(0,0,0,.08),-8px -8px 18px rgba(255,255,255,.9); --radius:18px; }
+    *{box-sizing:border-box} body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font-family:Inter,sans-serif;padding:32px 16px 64px;line-height:1.5}.wrap{max-width:1120px;margin:auto}h1,h2{font-family:'Playfair Display',serif;font-weight:500}h1{font-size:38px;margin:0 0 4px}h2{font-size:23px;margin:0 0 18px}.subtitle{color:var(--muted);margin:0 0 28px}.card{background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)}.gate{max-width:440px;margin:12vh auto;text-align:center}.gate[hidden],#dashboard[hidden]{display:none}.grid{display:grid;grid-template-columns:minmax(260px,.8fr) minmax(0,1.5fr);gap:24px}.user-list{max-height:620px;overflow:auto;display:grid;gap:10px}.user{width:100%;border:1px solid rgba(0,0,0,.06);background:var(--surface);color:var(--ink);padding:14px;text-align:left;border-radius:12px;cursor:pointer}.user:hover,.user.active{border-color:var(--green);background:#fff}.user strong,.user small{display:block}.user small{color:var(--muted);margin-top:2px}.toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:22px;flex-wrap:wrap}.status{color:var(--muted);font-size:13px}.editor-empty{color:var(--muted);text-align:center;padding:46px 0}.entry{display:grid;grid-template-columns:145px 130px 92px minmax(150px,1fr) auto;gap:8px;align-items:center;margin-bottom:9px}.entry input,.entry select,input{width:100%;font:inherit;border:1px solid rgba(0,0,0,.08);background:var(--surface);padding:10px;border-radius:10px;color:var(--ink)}button{font:inherit;font-weight:600;border:0;border-radius:11px;padding:10px 14px;background:var(--surface);color:var(--ink);cursor:pointer;box-shadow:var(--shadow)}button:hover{transform:translateY(-1px)}button.primary{background:var(--green);color:#fff}button.danger{background:var(--danger);color:#fff}button.mini{padding:9px 11px;box-shadow:none}.actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:20px}.profile{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}.profile label,.entry-head{font-size:12px;text-transform:uppercase;font-weight:600;letter-spacing:.4px;color:var(--muted)}.notice{border-radius:11px;padding:10px 12px;background:#f6eee0;color:#705716;font-size:13px;margin:0 0 16px}.error{color:var(--danger);font-size:14px;min-height:20px}.muted{color:var(--muted);font-size:13px}@media(max-width:780px){.grid{grid-template-columns:1fr}.entry{grid-template-columns:1fr 1fr}.entry input:nth-child(4){grid-column:span 2}.profile{grid-template-columns:1fr}h1{font-size:32px}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card gate" id="loadingGate"><h1>Chrona Admin</h1><p class="subtitle">Checking your private administrator access…</p></section>
+    <section class="card gate" id="deniedGate" hidden><h1>Access restricted</h1><p class="subtitle">This dashboard is available only to the configured Chrona administrator.</p><p class="muted">Sign in to the main Chrona app with the account whose UID is configured in both <code>firebase-config.js</code> and <code>firestore.rules</code>.</p></section>
+    <section id="dashboard" hidden>
+      <div class="toolbar"><div><h1>Chrona Admin</h1><p class="subtitle">Private ledger management</p></div><button id="refreshBtn">Refresh users</button></div>
+      <div class="grid">
+        <section class="card"><h2>Registered users</h2><p class="status" id="userCount">Loading…</p><div class="user-list" id="userList"></div></section>
+        <section class="card"><div id="editorEmpty" class="editor-empty">Choose a user to view and edit their ledger.</div><div id="editor" hidden>
+          <div class="toolbar"><h2 id="editorTitle">User ledger</h2><span class="status" id="entryCount"></span></div>
+          <div class="notice">Deleting a user removes their Firestore ledger and username lookup. Their Firebase Authentication account is intentionally left dormant because this static site has no privileged Admin SDK endpoint.</div>
+          <div class="profile"><div><label for="editName">Name</label><input id="editName" maxlength="40"></div><div><label for="editUsername">Username</label><input id="editUsername" maxlength="24" disabled></div></div>
+          <div class="entry-head">Ledger entries</div><div id="entries"></div>
+          <div class="actions"><button id="addEntryBtn">Add entry</button><button id="deleteUserBtn" class="danger">Delete user data</button><button id="saveUserBtn" class="primary">Save changes</button></div><p id="editorError" class="error"></p>
+        </div></section>
+      </div>
+    </section>
+  </main>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+import { getFirestore, collection, doc, getDocs, getDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+import { firebaseConfig, ADMIN_UID } from "./firebase-config.js";
+
+const app=initializeApp(firebaseConfig), auth=getAuth(app), firestore=getFirestore(app);
+let selected=null, users=[];
+const $=id=>document.getElementById(id);
+const esc=value=>String(value||'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+function setError(message=''){ $('editorError').textContent=message; }
+function showDashboard(){ $('loadingGate').hidden=true; $('deniedGate').hidden=true; $('dashboard').hidden=false; }
+function entryRow(key='', entry={status:'present',hours:8,note:''}){ const row=document.createElement('div'); row.className='entry'; row.innerHTML=`<input class="entry-date" type="date" value="${esc(key)}"><select class="entry-status"><option value="present">Present</option><option value="leave">Leave</option><option value="holiday">Holiday</option></select><input class="entry-hours" type="number" min="0" max="24" step="0.5" value="${Number(entry.hours ?? 0)}"><input class="entry-note" maxlength="500" placeholder="Optional note" value="${esc(entry.note)}"><button class="mini remove-entry" title="Remove entry">Remove</button>`; row.querySelector('.entry-status').value=entry.status||'present'; row.querySelector('.remove-entry').onclick=()=>row.remove(); return row; }
+async function listUsers(){
+  $('userList').innerHTML=''; $('userCount').textContent='Loading users…';
+  try { const snapshots=await getDocs(collection(firestore,'usernames')); users=(await Promise.all(snapshots.docs.map(async item=>{const uid=item.data().uid, ledger=await getDoc(doc(firestore,'ledgers',uid)); return {uid,username:item.id,ledger:ledger.exists()?ledger.data():null}; }))).sort((a,b)=>a.username.localeCompare(b.username));
+    $('userCount').textContent=`${users.length} registered ${users.length===1?'user':'users'}`;
+    users.forEach(user=>{const button=document.createElement('button');button.className='user'+(selected?.uid===user.uid?' active':'');button.innerHTML=`<strong>${esc(user.username)}</strong><small>${esc(user.ledger?.name||'No ledger document')}</small>`;button.onclick=()=>openUser(user);$('userList').appendChild(button);});
+  } catch(error){ $('userCount').textContent='Could not load users.'; console.error(error); }
+}
+function openUser(user){ selected={...user,ledger:user.ledger||{username:user.username,name:'',data:{}}}; $('editorEmpty').hidden=true;$('editor').hidden=false;$('editorTitle').textContent='@'+user.username;$('editName').value=selected.ledger.name||'';$('editUsername').value=user.username;const entries=$('entries');entries.innerHTML='';Object.entries(selected.ledger.data||{}).sort(([a],[b])=>a.localeCompare(b)).forEach(([key,value])=>entries.appendChild(entryRow(key,value)));$('entryCount').textContent=`${entries.children.length} entries`;setError(); }
+$('addEntryBtn').onclick=()=>{$('entries').appendChild(entryRow());$('entryCount').textContent=`${$('entries').children.length} entries`;};
+$('saveUserBtn').onclick=async()=>{if(!selected)return;setError();const name=$('editName').value.trim(), data={}, seen=new Set();for(const row of $('entries').children){const key=row.querySelector('.entry-date').value,status=row.querySelector('.entry-status').value,hours=Number(row.querySelector('.entry-hours').value),note=row.querySelector('.entry-note').value.trim();if(!key){return setError('Every entry needs a date.');}if(seen.has(key)){return setError('Each date can appear only once.');}if(!Number.isFinite(hours)||hours<0||hours>24){return setError('Hours must be between 0 and 24.');}seen.add(key);data[key]={status,hours:status==='holiday'?0:hours};if(note)data[key].note=note;}try{await setDoc(doc(firestore,'ledgers',selected.uid),{username:selected.username,name,data});selected.ledger={username:selected.username,name,data};$('entryCount').textContent=`${Object.keys(data).length} entries saved`;await listUsers();}catch(error){setError('Could not save this ledger. Check the admin rules and try again.');console.error(error);}};
+$('deleteUserBtn').onclick=async()=>{if(!selected||!confirm(`Delete Firestore data for @${selected.username}? This cannot be undone.`))return;setError();try{const batch=writeBatch(firestore);batch.delete(doc(firestore,'ledgers',selected.uid));batch.delete(doc(firestore,'usernames',selected.username));await batch.commit();selected=null;$('editor').hidden=true;$('editorEmpty').hidden=false;await listUsers();}catch(error){setError('Could not delete this user data.');console.error(error);}};
+$('refreshBtn').onclick=listUsers;
+onAuthStateChanged(auth,user=>{if(!user||ADMIN_UID==='PASTE_MY_UID_HERE'||user.uid!==ADMIN_UID){$('loadingGate').hidden=true;$('deniedGate').hidden=false;return;}showDashboard();listUsers();});
+</script>
+</body>
+</html>

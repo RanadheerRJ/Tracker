@@ -762,6 +762,9 @@
   .pin-input { text-align: center !important; letter-spacing: .45em; font-family: 'JetBrains Mono', monospace !important; font-size: 21px !important; }
   .account-error { min-height: 20px; color: var(--danger); font-size: 13px; margin: 4px 0 0; text-align: center; }
   .account-note { color: var(--text-secondary); font-size: 12px; margin: 18px 0 0; line-height: 1.5; }
+  .text-button { width: auto; display: inline; padding: 0; border: 0; background: transparent; color: var(--accent-green); box-shadow: none; font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
+  .text-button:hover { transform: none; box-shadow: none; }
+  .sync-state { font-size: 12px; color: var(--text-secondary); margin-top: 10px; }
   .quick-actions { display: flex; gap: 12px; flex-wrap: wrap; margin: 0 0 24px; }
   .quick-actions button { font-size: 13px; padding: 10px 14px; }
   .secondary-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
@@ -782,30 +785,31 @@
 </head>
 <body>
 <div id="accountGate" class="account-gate" aria-live="polite">
-  <section class="account-card" id="createAccountCard">
-    <div class="account-mark"><i data-lucide="shield-check"></i></div>
-    <h1>Your private Chrona</h1>
-    <p class="account-copy">Create a local profile and PIN to keep this device’s timesheet private.</p>
-    <form id="createAccountForm" class="account-form">
+  <section class="account-card" id="registerAccountCard">
+    <div class="account-mark"><i data-lucide="cloud"></i></div>
+    <h1>Welcome to Chrona</h1>
+    <p class="account-copy">Create an account to keep your private ledger synced securely across your devices.</p>
+    <form id="registerAccountForm" class="account-form">
       <div><label for="accountName">Your name</label><input id="accountName" type="text" maxlength="40" autocomplete="name" required></div>
       <div><label for="accountUsername">Username</label><input id="accountUsername" type="text" maxlength="24" pattern="[A-Za-z0-9_.-]{3,24}" autocomplete="username" required></div>
       <div><label for="newPin">Choose a 4–6 digit PIN</label><input id="newPin" class="pin-input" type="password" inputmode="numeric" pattern="\d{4,6}" maxlength="6" autocomplete="new-password" required></div>
       <div><label for="confirmPin">Confirm PIN</label><input id="confirmPin" class="pin-input" type="password" inputmode="numeric" pattern="\d{4,6}" maxlength="6" autocomplete="new-password" required></div>
-      <div class="account-error" id="createAccountError"></div>
-      <button class="primary" type="submit"><i data-lucide="arrow-right"></i> Create local account</button>
+      <div class="account-error" id="registerAccountError"></div>
+      <button class="primary" type="submit"><i data-lucide="user-plus"></i> Create account</button>
     </form>
-    <p class="account-note">This is a device-only app lock, not cloud sign-in. Export a backup regularly—clearing browser data removes this local account and its records.</p>
+    <p class="account-note">Already use Chrona? <button type="button" class="text-button" id="showLoginBtn">Log in</button></p>
   </section>
-  <section class="account-card" id="unlockAccountCard" hidden>
+  <section class="account-card" id="loginAccountCard" hidden>
     <div class="account-mark"><i data-lucide="lock-keyhole"></i></div>
     <h1>Welcome back</h1>
-    <p class="account-copy" id="unlockCopy">Enter your PIN to open Chrona.</p>
-    <form id="unlockAccountForm" class="account-form">
-      <div><label for="unlockPin">PIN</label><input id="unlockPin" class="pin-input" type="password" inputmode="numeric" pattern="\d{4,6}" maxlength="6" autocomplete="current-password" required autofocus></div>
-      <div class="account-error" id="unlockAccountError"></div>
-      <button class="primary" type="submit"><i data-lucide="unlock"></i> Unlock Chrona</button>
+    <p class="account-copy">Log in to load your private timesheet from any device.</p>
+    <form id="loginAccountForm" class="account-form">
+      <div><label for="loginUsername">Username</label><input id="loginUsername" type="text" maxlength="24" autocomplete="username" required></div>
+      <div><label for="loginPin">PIN</label><input id="loginPin" class="pin-input" type="password" inputmode="numeric" pattern="\d{4,6}" maxlength="6" autocomplete="current-password" required></div>
+      <div class="account-error" id="loginAccountError"></div>
+      <button class="primary" type="submit"><i data-lucide="unlock"></i> Log in</button>
     </form>
-    <p class="account-note">Your PIN is verified locally and never sent anywhere.</p>
+    <p class="account-note">New to Chrona? <button type="button" class="text-button" id="showRegisterBtn">Create an account</button></p>
   </section>
 </div>
 <div id="appShell" class="app-shell locked">
@@ -907,7 +911,7 @@
   </div>
 </div>
 
-<footer class="note">Your private ledger is stored in this browser’s local database. Export a backup regularly to move it to another device or protect against cleared browser data.</footer>
+<footer class="note">Your private ledger is stored in this browser’s local database. Export a backup regularly to move it to another device or protect against cleared browser data. <button type="button" class="text-button" id="signOutBtn">Sign out</button></footer>
 </div>
 
 <div class="overlay" id="fillOverlay">
@@ -943,136 +947,89 @@
   </div>
 </div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+import { firebaseConfig } from "./firebase-config.js";
+
 (function(){
   const STORAGE_KEY = 'timesheet_ledger_v1'; // legacy localStorage key, migrated once
-  const NAME_KEY = 'timesheet_ledger_user_name';
-  const DB_NAME = 'chrona-ledger';
-  const DB_VERSION = 1;
-  const DATA_RECORD = 'ledger';
-  const ACCOUNT_RECORD = 'account';
+  const DB_NAME = 'chrona-ledger', DB_VERSION = 2;
+  const DATA_RECORD = 'ledger', PENDING_RECORD = 'pendingSync', PROFILE_RECORD = 'profile';
   const dowNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  let data = {};
-  let account = null;
-  let isUnlocked = false;
-  let db;
+  const firebaseApp = initializeApp(firebaseConfig);
+  const auth = getAuth(firebaseApp);
+  const firestore = getFirestore(firebaseApp);
+  let data = {}, legacyData = {}, profile = null, currentUser = null, db, syncInFlight = false;
 
-  function openDatabase(){
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, DB_VERSION);
-      request.onupgradeneeded = () => {
-        const database = request.result;
-        if(!database.objectStoreNames.contains('app')) database.createObjectStore('app');
-      };
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-  }
-  function dbGet(key){
-    return new Promise((resolve, reject) => {
-      const request = db.transaction('app', 'readonly').objectStore('app').get(key);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-  }
-  function dbSet(key, value){
-    return new Promise((resolve, reject) => {
-      const request = db.transaction('app', 'readwrite').objectStore('app').put(value, key);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
-  }
-  function save(){
-    // IndexedDB is asynchronous; each save writes the current in-memory ledger snapshot.
-    return dbSet(DATA_RECORD, data).catch(err => console.error('Could not save your ledger:', err));
-  }
-  function bytesToBase64(bytes){ return btoa(String.fromCharCode(...bytes)); }
-  function base64ToBytes(value){ return Uint8Array.from(atob(value), c => c.charCodeAt(0)); }
-  async function pinVerifier(pin, salt){
-    const pinBytes = new TextEncoder().encode(pin);
-    const key = await crypto.subtle.importKey('raw', pinBytes, 'PBKDF2', false, ['deriveBits']);
-    const bits = await crypto.subtle.deriveBits({name:'PBKDF2', salt:base64ToBytes(salt), iterations:120000, hash:'SHA-256'}, key, 256);
-    return bytesToBase64(new Uint8Array(bits));
-  }
-  function validPin(pin){
-    if(!/^\d{4,6}$/.test(pin)) return false;
-    if(/^(\d)\1+$/.test(pin)) return false;
-    return !['0123','1234','2345','3456','4567','5678','6789','012345','123456','234567','345678','456789'].includes(pin);
-  }
-  function setGreeting(name){
-    document.getElementById('nameplate').textContent = name ? "— " + name + "'s ledger" : '';
-  }
+  function openDatabase(){ return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = () => { if(!request.result.objectStoreNames.contains('app')) request.result.createObjectStore('app'); };
+    request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
+  }); }
+  function dbGet(key){ return new Promise((resolve,reject) => { const request=db.transaction('app','readonly').objectStore('app').get(key); request.onsuccess=()=>resolve(request.result); request.onerror=()=>reject(request.error); }); }
+  function dbSet(key,value){ return new Promise((resolve,reject) => { const request=db.transaction('app','readwrite').objectStore('app').put(value,key); request.onsuccess=()=>resolve(); request.onerror=()=>reject(request.error); }); }
+  function ledgerKey(){ return 'ledger:' + currentUser.uid; }
+  function profileKey(){ return 'profile:' + currentUser.uid; }
+  function pendingKey(){ return 'pendingSync:' + currentUser.uid; }
+  function localCacheKey(){ return 'timesheet_ledger_cloud_cache_' + currentUser.uid; }
+  function readLocalCache(){ try { return JSON.parse(localStorage.getItem(localCacheKey()) || 'null'); } catch(e) { return null; } }
+  function usernameFor(value){ return value.trim().toLowerCase(); }
+  function emailFor(username){ return username + '@timesheetledger.app'; }
+  function passwordFor(pin){ return 'tlk_' + pin; } // Firebase passwords require six characters; the PIN itself remains 4–6 digits.
+  function validPin(pin){ return /^\d{4,6}$/.test(pin) && !/^(\d)\1+$/.test(pin); }
+  function setGreeting(name){ document.getElementById('nameplate').textContent = name ? '— ' + name + "'s ledger" : ''; }
   function showAccountGate(mode){
-    document.getElementById('appShell').classList.add('locked');
-    document.getElementById('accountGate').classList.add('show');
-    document.getElementById('createAccountCard').hidden = mode !== 'create';
-    document.getElementById('unlockAccountCard').hidden = mode !== 'unlock';
-    if(mode === 'unlock'){
-      document.getElementById('unlockCopy').textContent = 'Welcome back, ' + account.name + '. Enter your PIN to open Chrona.';
-      setTimeout(() => document.getElementById('unlockPin').focus(), 0);
-    } else setTimeout(() => document.getElementById('accountName').focus(), 0);
+    document.getElementById('appShell').classList.add('locked'); document.getElementById('accountGate').classList.add('show');
+    document.getElementById('registerAccountCard').hidden = mode !== 'register'; document.getElementById('loginAccountCard').hidden = mode !== 'login';
+    setTimeout(()=>document.getElementById(mode === 'login' ? 'loginUsername' : 'accountName').focus(),0);
   }
-  function unlockApp(){
-    isUnlocked = true;
-    document.getElementById('accountGate').classList.remove('show');
-    document.getElementById('appShell').classList.remove('locked');
-    setGreeting(account.name);
-    render();
+  function openApp(){ document.getElementById('accountGate').classList.remove('show'); document.getElementById('appShell').classList.remove('locked'); setGreeting(profile?.name || ''); render(); }
+  async function save(){ if(!currentUser) return; localStorage.setItem(localCacheKey(),JSON.stringify(data)); await dbSet(ledgerKey(),data); await dbSet(pendingKey(),true); queueCloudSync(); }
+  async function queueCloudSync(){
+    if(syncInFlight || !currentUser || !navigator.onLine) return;
+    syncInFlight = true;
+    try { await setDoc(doc(firestore,'ledgers',currentUser.uid), { username:profile.username, name:profile.name, data }); await dbSet(pendingKey(),false); }
+    catch(error) { console.warn('Chrona will sync when a connection is available.', error); }
+    finally { syncInFlight=false; }
   }
-  function lockApp(){
-    if(!isUnlocked || !account) return;
-    isUnlocked = false;
-    document.getElementById('unlockPin').value = '';
-    document.getElementById('unlockAccountError').textContent = '';
-    showAccountGate('unlock');
+  async function loadCloudLedger(){
+    const pending = await dbGet(pendingKey());
+    try {
+      const snapshot = await getDoc(doc(firestore,'ledgers',currentUser.uid));
+      if(snapshot.exists()) {
+        const cloud = snapshot.data(); profile={name:cloud.name || profile?.name || '', username:cloud.username || profile?.username || ''};
+        if(!pending) { data=cloud.data && typeof cloud.data === 'object' ? cloud.data : {}; await dbSet(ledgerKey(),data); localStorage.setItem(localCacheKey(),JSON.stringify(data)); }
+        await dbSet(profileKey(),profile);
+      }
+      if(pending) await queueCloudSync();
+    } catch(error) { console.warn('Using the saved offline ledger until Chrona reconnects.',error); }
   }
   async function initializeStorage(){
-    if(!('indexedDB' in window) || !window.crypto?.subtle){
-      alert('Chrona needs a modern browser with IndexedDB and Web Crypto enabled to protect this local account.');
-      return;
-    }
-    db = await openDatabase();
-    data = await dbGet(DATA_RECORD) || {};
-    // Migrate pre-account localStorage records once, without overwriting existing IndexedDB data.
-    if(!Object.keys(data).length){
-      try {
-        const legacy = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-        if(legacy && typeof legacy === 'object') { data = legacy; await save(); }
-      } catch(e) { console.warn('Legacy timesheet could not be migrated.', e); }
-    }
-    account = await dbGet(ACCOUNT_RECORD);
-    if(account) showAccountGate('unlock'); else showAccountGate('create');
+    if(!('indexedDB' in window)){ alert('Chrona needs IndexedDB enabled to save your offline ledger.'); return; }
+    db=await openDatabase();
+    // Keep a one-time pre-cloud cache only until it is adopted by the first account.
+    legacyData=await dbGet(DATA_RECORD)||{}; profile=await dbGet(PROFILE_RECORD)||null;
+    if(!Object.keys(legacyData).length) { try { const legacy=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); if(legacy && typeof legacy==='object') legacyData=legacy; } catch(e){ console.warn('Could not migrate legacy ledger.',e); } }
+    onAuthStateChanged(auth, async user => { currentUser=user; if(user){ data=await dbGet(ledgerKey()) || readLocalCache() || legacyData || {}; profile=await dbGet(profileKey()) || profile; await loadCloudLedger(); openApp(); } else showAccountGate('login'); });
   }
-
-  document.getElementById('createAccountForm').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const name = document.getElementById('accountName').value.trim();
-    const username = document.getElementById('accountUsername').value.trim().toLowerCase();
-    const pin = document.getElementById('newPin').value;
-    const confirm = document.getElementById('confirmPin').value;
-    const error = document.getElementById('createAccountError');
-    error.textContent = '';
-    if(!name) return error.textContent = 'Please enter your name.';
-    if(!/^[a-z0-9_.-]{3,24}$/.test(username)) return error.textContent = 'Use 3–24 letters, numbers, dots, underscores, or hyphens.';
-    if(!validPin(pin)) return error.textContent = 'Choose a non-obvious 4–6 digit PIN.';
-    if(pin !== confirm) return error.textContent = 'PIN entries do not match.';
-    const salt = new Uint8Array(16); crypto.getRandomValues(salt);
-    account = { version: 1, provider: 'local', name, username, salt: bytesToBase64(salt), verifier: await pinVerifier(pin, bytesToBase64(salt)), createdAt: new Date().toISOString() };
-    await dbSet(ACCOUNT_RECORD, account);
-    unlockApp();
+  document.getElementById('showLoginBtn').addEventListener('click',()=>showAccountGate('login'));
+  document.getElementById('showRegisterBtn').addEventListener('click',()=>showAccountGate('register'));
+  document.getElementById('registerAccountForm').addEventListener('submit',async event=>{
+    event.preventDefault(); const name=document.getElementById('accountName').value.trim(), username=usernameFor(document.getElementById('accountUsername').value), pin=document.getElementById('newPin').value, confirm=document.getElementById('confirmPin').value, error=document.getElementById('registerAccountError'); error.textContent='';
+    if(!name) return error.textContent='Please enter your name.'; if(!/^[a-z0-9_.-]{3,24}$/.test(username)) return error.textContent='Use 3–24 letters, numbers, dots, underscores, or hyphens.'; if(!validPin(pin)) return error.textContent='Choose a 4–6 digit PIN that is not all the same digit.'; if(pin!==confirm) return error.textContent='PIN entries do not match.';
+    try { const credential=await createUserWithEmailAndPassword(auth,emailFor(username),passwordFor(pin)); currentUser=credential.user; profile={name,username}; const batch=writeBatch(firestore); batch.set(doc(firestore,'ledgers',currentUser.uid),{username,name,data}); batch.set(doc(firestore,'usernames',username),{uid:currentUser.uid}); await batch.commit(); await dbSet(profileKey(),profile); await dbSet(ledgerKey(),data); localStorage.setItem(localCacheKey(),JSON.stringify(data)); await dbSet(pendingKey(),false); legacyData={}; openApp(); }
+    catch(err) { error.textContent=err.code==='auth/email-already-in-use' ? 'That username is already taken.' : 'Could not create your account. Please try again.'; console.error(err); }
   });
-  document.getElementById('unlockAccountForm').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const pin = document.getElementById('unlockPin').value;
-    const error = document.getElementById('unlockAccountError');
-    error.textContent = '';
-    try {
-      if(await pinVerifier(pin, account.salt) !== account.verifier){ error.textContent = 'That PIN is not correct.'; document.getElementById('unlockPin').select(); return; }
-      unlockApp();
-    } catch(e) { error.textContent = 'Could not verify your PIN. Please try again.'; }
+  document.getElementById('loginAccountForm').addEventListener('submit',async event=>{
+    event.preventDefault(); const username=usernameFor(document.getElementById('loginUsername').value), pin=document.getElementById('loginPin').value, error=document.getElementById('loginAccountError'); error.textContent='';
+    if(!/^[a-z0-9_.-]{3,24}$/.test(username)||!validPin(pin)) return error.textContent='Enter your username and PIN.';
+    try { await signInWithEmailAndPassword(auth,emailFor(username),passwordFor(pin)); } catch(err) { error.textContent='That username or PIN is not correct.'; console.error(err); }
   });
-  document.addEventListener('visibilitychange', () => { if(document.hidden) lockApp(); });
+  document.getElementById('signOutBtn').addEventListener('click', async ()=>{ await signOut(auth); });
+  window.addEventListener('online',queueCloudSync);
 
   const monthSelect = document.getElementById('monthSelect');
   const yearSelect = document.getElementById('yearSelect');
@@ -1653,7 +1610,7 @@
     const entries = Object.keys(data).sort().filter(key => key >= from && key <= to).map(key => [key, data[key]]);
     const totalHours = entries.reduce((sum, [,entry]) => sum + (entry.status === 'present' ? Number(entry.hours || 0) : 0), 0);
     const esc = value => String(value || '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-    document.getElementById('printSheet').innerHTML = '<h1>Chrona Timesheet</h1><p><strong>' + esc(account?.name) + '</strong><br>Period: ' + esc(from) + ' to ' + esc(to) + '<br>Total present hours: <strong>' + totalHours + '</strong></p><table><thead><tr><th>Date</th><th>Status</th><th>Hours</th><th>Note</th></tr></thead><tbody>' + entries.map(([key, entry]) => '<tr><td>' + esc(key) + '</td><td>' + esc(entry.status) + '</td><td>' + esc(entry.hours) + '</td><td>' + esc(entry.note) + '</td></tr>').join('') + '</tbody></table><p style="margin-top:40px">Signature: ______________________________</p>';
+    document.getElementById('printSheet').innerHTML = '<h1>Chrona Timesheet</h1><p><strong>' + esc(profile?.name) + '</strong><br>Period: ' + esc(from) + ' to ' + esc(to) + '<br>Total present hours: <strong>' + totalHours + '</strong></p><table><thead><tr><th>Date</th><th>Status</th><th>Hours</th><th>Note</th></tr></thead><tbody>' + entries.map(([key, entry]) => '<tr><td>' + esc(key) + '</td><td>' + esc(entry.status) + '</td><td>' + esc(entry.hours) + '</td><td>' + esc(entry.note) + '</td></tr>').join('') + '</tbody></table><p style="margin-top:40px">Signature: ______________________________</p>';
     window.print();
   });
 
