@@ -1,4 +1,4 @@
-# Chrona — cloud-synced timesheet PWA
+# Chrona — cloud-synced timesheet PWA 
 
 Chrona is an offline-first, installable timesheet calendar. Users sign in with a username and PIN, then their calendar, hours, and notes follow them across devices through Firebase Authentication and Cloud Firestore.
 
